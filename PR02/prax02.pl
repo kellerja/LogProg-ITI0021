@@ -22,8 +22,10 @@ aunt(Person, Aunt) :- % mother's side
     mother(Person, Mother) , sister(Mother, Aunt).
 aunt(Person, Aunt) :- % father's sides
     mother(Person, Mother), married(Mother, Father), sister(Father, Aunt).
-uncle(Person, Uncle) :- 
-    aunt(Person, Aunt) , married(Aunt, Uncle).
+uncle(Person, Uncle) :- % mother's side
+    mother(Person, Mother) , brother(Mother, Uncle).
+uncle(Person, Uncle) :- % father's side
+    mother(Person, Mother) , married(Mother, Father) , brother(Father, Uncle).
 grandfather(Person, Grandfather) :- 
     grandmother(Person, Grandmother) , married(Grandmother, Grandfather).
 grandmother(Person, Grandmother) :- % mother's side
