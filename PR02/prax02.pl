@@ -4,22 +4,24 @@ female(mari).
 male(priit).
 male(vello).
 male(tiit).
+male(kalle).
 married(anne,vello).
 mother(evelin,anne).
 mother(mari, anne).
-merried(evelin, tiit).
+married(mari, kalle).
+married(evelin, tiit).
 mother(priit, evelin).
 
 father(Child, Father) :- 
     mother(Child, Mother) , married(Mother, Father).
 brother(Person, Brother) :- 
-    Person \= Brother , male(Brother) , mother(Person, Mother) , mother(Brother, Mother).
+    mother(Person, Mother) , mother(Brother, Mother) , Person \= Brother , male(Brother).
 sister(Person, Sister) :- 
-    Person \= Sister , female(Sister) , mother(Person, Mother) , mother(Sister, Mother).
+    mother(Person, Mother) , mother(Sister, Mother) , Person \= Sister , female(Sister).
 aunt(Person, Aunt) :- 
-    female(Aunt) , mother(Aunt, Grandmother) , grandmother(Person, Grandmother).
+    mother(Person, Mother) , sister(Mother, Aunt).
 uncle(Person, Uncle) :- 
-    male(Uncle) , married(Uncle, Aunt) , aunt(Person, Aunt).
+    aunt(Person, Aunt) , married(Aunt, Uncle).
 grandfather(Person, Grandfather) :- 
     grandmother(Person, Grandmother) , married(Grandmother, Grandfather).
 grandmother(Person, Grandmother) :- 
