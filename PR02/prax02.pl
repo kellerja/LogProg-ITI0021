@@ -13,9 +13,9 @@ mother(priit, evelin).
 father(Child, Father) :- 
     mother(Child, Mother) , married(Mother, Father).
 brother(Person, Brother) :- 
-    Person \= Brother , male(Person) , mother(Person, Mother) , mother(Brother, Mother).
+    Person \= Brother , male(Brother) , mother(Person, Mother) , mother(Brother, Mother).
 sister(Person, Sister) :- 
-    Person \= Sister , female(Person) , mother(Person, Mother) , mother(Sister, Mother).
+    Person \= Sister , female(Sister) , mother(Person, Mother) , mother(Sister, Mother).
 aunt(Person, Aunt) :- 
     female(Aunt) , mother(Aunt, Grandmother) , grandmother(Person, Grandmother).
 uncle(Person, Uncle) :- 
