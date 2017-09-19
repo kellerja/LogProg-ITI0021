@@ -75,9 +75,11 @@ ancestor2(Child, Parent, X) :-
     findall(C, mother(C, Parent), List),
     length(List, N),
     N = X.
-ancestor2(Child, Parent, X) :- 
+/*
+    ancestor2(Child, Parent, X) :- 
     male_ancestor(Child, Parent),
     married(Wife, Parent),
     findall(C, mother(C, Wife), List),
     length(List, N),
     N = X.
+*/
