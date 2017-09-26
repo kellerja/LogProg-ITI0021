@@ -130,4 +130,3 @@ occupation(Who, Relative, O) :-
 
 who_is(O, Who) :-
   alamhulk(O, Who).
-
