@@ -129,5 +129,4 @@ occupation(Who, Relative, O) :-
   alamklass(R, O).
 
 who_is(O, Who) :-
-  alamhulk(O, Who).
-
+  alamhulk(Who, O).
