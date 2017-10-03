@@ -29,4 +29,4 @@ kordista([], _, []).
 kordista([H|T], N, [H|X]) :-
     kordista_element(H, N, Result),
     kordista(T, N, Y),
-    append(Result, Y, X).
+    append(Result, Y, X), !.
