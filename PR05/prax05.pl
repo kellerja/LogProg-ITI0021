@@ -31,4 +31,5 @@ kordista([H|T], N, [H|X]) :-
     kordista(T, N, Y),
     append(Result, Y, X), !.
 
- vordle_predikaadiga(List, Predikaat, X).
+ vordle_predikaadiga(List, Predikaat, X) :- fail.
+ 
