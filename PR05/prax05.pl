@@ -1,3 +1,6 @@
+viimane_element(A, [A]) :- !.
+viimane_element(X,[_|L]) :-
+    viimane_element(X, L).
 
 suurim([], []).
 suurim([A], [A]).
@@ -27,3 +30,5 @@ kordista([H|T], N, [H|X]) :-
     kordista_element(H, N, Result),
     kordista(T, N, Y),
     append(Result, Y, X), !.
+
+ vordle_predikaadiga(List, Predikaat, X).
