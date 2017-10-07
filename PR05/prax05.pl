@@ -31,5 +31,18 @@ kordista([H|T], N, [H|X]) :-
     kordista(T, N, Y),
     append(Result, Y, X), !.
 
- vordle_predikaadiga(List, Predikaat, X) :- fail.
- 
+paaris_arv(N) :- 
+    Z is N mod 2, Z = 0.
+
+paaritu_arv(N) :- 
+    not(paaris_arv(N)).
+
+suurem_kui(N, X) :-
+    N > X.
+
+vordle_predikaadiga([], _, []).
+vordle_predikaadiga([H|T], [Predikaat|Argumendid], [H|X]) :-
+    vordle_predikaadiga(T, [Predikaat|Argumendid], X),
+    Term =.. [Predikaat, H|Argumendid], call(Term), !.
+ vordle_predikaadiga([H|T], [Predikaat|Argumendid], X) :-
+    vordle_predikaadiga(T, [Predikaat|Argumendid], X).
