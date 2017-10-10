@@ -55,11 +55,14 @@ soob(Kes, Keda, Millal) :-
     oo(Millal), !.
 soob(Kes, Keda, Millal) :-
     soob(Kes, Keda), 
-    alamklass(Keda, taim).
+    alamklass(Keda, taim),
+    not(oo(Millal)).
 
 % teadmisbaas
 is_a(rebane, karnivoor).
 is_a(siga, omnivoor).
+is_a(lehm, herbivoor).
+    is_a(maasi, lehm).
 is_a(inimene, omnivoor).
 is_a(kass, karnivoor).
 is_a(kaelkirjak, herbivoor).
