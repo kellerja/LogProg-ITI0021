@@ -7,6 +7,21 @@ is_a(taim, elusolend).
     is_a(oistaim, taim).
     is_a(mitteoistaim, taim).
 
+% teadmisbaas
+is_a(rebane, karnivoor).
+is_a(siga, omnivoor).
+is_a(lehm, herbivoor).
+    is_a(maasi, lehm).
+is_a(inimene, omnivoor).
+is_a(kass, karnivoor).
+is_a(kaelkirjak, herbivoor).
+is_a(rabbit, herbivoor).
+
+is_a(porgand, mitteoistaim).
+is_a(kapsas, oistaim).
+is_a(kartul, mitteoistaim).
+is_a(korvits, oistaim).
+
 % Omadused
 toitub(elusolend).
 hingab(elusolend).
@@ -25,7 +40,7 @@ taimne_toit(taim).
 
 %---------------- Pärimisseos ----------------------
 alamklass(Kes, Kelle):-
-	is_a(Kes,Kelle),!.
+	is_a(Kes,Kelle), !.
 alamklass(Kes, Kelle):-
 	is_a(Kes,Vahepealne),
 	alamklass(Vahepealne,Kelle).
@@ -40,7 +55,7 @@ liigub(X) :- alamklass(X, Y), liigub(Y), !.
 
 soob(X, Y) :- alamklass(X, Z), soob(Z, Y), not(X = Y), !.
 soob(X, Y) :- alamklass(Y, Z), soob(X, Z), not(X = Y), !.
-soob(X, Y) :- alamklass(X, Z), alamklass(Y, W), soob(Z, W), not(X = Y), !.
+%soob(X, Y) :- alamklass(X, Z), alamklass(Y, W), soob(Z, W), not(X = Y), !.
 
 loomne_toit(X) :- alamklass(X, Y), loomne_toit(Y), !.
 taimne_toit(X) :- alamklass(X, Y), taimne_toit(Y), !.
@@ -57,18 +72,3 @@ soob(Kes, Keda, Millal) :-
     soob(Kes, Keda), 
     alamklass(Keda, taim),
     not(oo(Millal)).
-
-% teadmisbaas
-is_a(rebane, karnivoor).
-is_a(siga, omnivoor).
-is_a(lehm, herbivoor).
-    is_a(maasi, lehm).
-is_a(inimene, omnivoor).
-is_a(kass, karnivoor).
-is_a(kaelkirjak, herbivoor).
-is_a(rabbit, herbivoor).
-
-is_a(porgand, mitteoistaim).
-is_a(kapsas, oistaim).
-is_a(kartul, mitteoistaim).
-is_a(korvits, oistaim).
