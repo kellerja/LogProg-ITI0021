@@ -56,8 +56,8 @@ kasvab(X) :- alamklass(X, Y), kasvab(Y).
 
 liigub(X) :- alamklass(X, Y), liigub(Y).
 
-loomne_toit(X) :- alamhulk(X, Y), is_a(X, Y), loomne_toit(Y).
-taimne_toit(X) :- alamhulk(X, Y), is_a(X, Y), taimne_toit(Y).
+%loomne_toit(X) :- alamhulk(X, Y), is_a(X, Y), loomne_toit(Y).
+%taimne_toit(X) :- alamhulk(X, Y), is_a(X, Y), taimne_toit(Y).
 
 % söömina vastavalt ajale.
 oo(Aeg) :- Aeg >= 0 , Aeg =< 6, !.
@@ -65,15 +65,17 @@ oo(Aeg) :- Aeg >= 22, Aeg =< 24, !.
 
 soob(Kes, Keda, Millal) :- 
     oo(Millal),
-    loomne_toit(Keda),
+    %loomne_toit(Keda),
     loomne_toit(Toit),
     soob(Sooja, Toit),
     alamklass(Kes, Sooja),
+    alamklass(Keda, Toit),
     Kes \= Keda.
 soob(Kes, Keda, Millal) :-
     \+ oo(Millal),
-    taimne_toit(Keda),
+    %taimne_toit(Keda),
     taimne_toit(Toit),
     soob(Sooja, Toit),
     alamklass(Kes, Sooja),
+    alamklass(Keda, Toit),
     Kes \= Keda.
