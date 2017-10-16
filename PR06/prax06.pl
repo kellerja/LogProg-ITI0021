@@ -49,8 +49,8 @@ alamklass(Kes, Kelle):-
 	is_a(Kes,Vahepealne),
 	alamklass(Vahepealne,Kelle).
 
-alamhulk(X,Y):-  is_a(X,Y).
-alamhulk(X,Y):-  is_a(W,Y), alamhulk(X,W).
+alamhulk(Kes, Kelle):-  is_a(Kes, Kelle).
+alamhulk(Kes, Kelle):-  is_a(Vahepealne, Kelle), alamhulk(Kes, Vahepealne).
 % Omaduste pärimine
 toitub(X) :- alamklass(X, Y), toitub(Y).
 hingab(X) :- alamklass(X, Y), hingab(Y).
@@ -59,26 +59,24 @@ kasvab(X) :- alamklass(X, Y), kasvab(Y).
 
 liigub(X) :- alamklass(X, Y), liigub(Y).
 
-loomne_toit(X) :- alamhulk(X, Y), is_a(X, Y), loomne_toit(Y), !.
-taimne_toit(X) :- alamhulk(X, Y), is_a(X, Y), taimne_toit(Y), !.
+loomne_toit(X) :- alamhulk(X, Y), is_a(X, Y), loomne_toit(Y).
+taimne_toit(X) :- alamhulk(X, Y), is_a(X, Y), taimne_toit(Y).
 
 % söömina vastavalt ajale.
-oo(Aeg) :- Aeg >= 0 , Aeg =< 6, !.
-oo(Aeg) :- Aeg >= 22, Aeg =< 24, !.
+oo(Aeg) :- Aeg >= 0 , Aeg =< 6.
+oo(Aeg) :- Aeg >= 22, Aeg =< 24.
+
+soob_toit(Kes, Keda, Toit) :-
+    soob(Sooja, Toit),
+    alamklass(Kes, Sooja),
+    alamklass(Keda, Toit),
+    Kes \= Keda.
 
 soob(Kes, Keda, Millal) :- 
     oo(Millal),
-    loomne_toit(Keda),
     loomne_toit(Toit),
-    soob(Sooja, Toit),
-    alamklass(Kes, Sooja),
-    %alamklass(Keda, Toit),
-    Kes \= Keda, !.
+    soob_toit(Kes, Keda, Toit).
 soob(Kes, Keda, Millal) :-
     \+ oo(Millal),
-    taimne_toit(Keda),
     taimne_toit(Toit),
-    soob(Sooja, Toit),
-    alamklass(Kes, Sooja),
-    %alamklass(Keda, Toit),
-    Kes \= Keda.
+    soob_toit(Kes, Keda, Toit).
