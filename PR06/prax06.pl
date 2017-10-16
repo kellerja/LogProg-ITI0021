@@ -13,6 +13,7 @@ is_a(siga, omnivoor).
 is_a(lehm, herbivoor).
     is_a(maasi, lehm).
 is_a(inimene, omnivoor).
+    is_a(mari, inimene).
 is_a(kass, karnivoor).
 is_a(kaelkirjak, herbivoor).
 is_a(rabbit, herbivoor).
@@ -53,22 +54,22 @@ kasvab(X) :- alamklass(X, Y), kasvab(Y), !.
 
 liigub(X) :- alamklass(X, Y), liigub(Y), !.
 
-soob(X, Y) :- alamklass(X, Z), soob(Z, Y), not(X = Y), !.
-soob(X, Y) :- alamklass(Y, Z), soob(X, Z), not(X = Y), !.
-%soob(X, Y) :- alamklass(X, Z), alamklass(Y, W), soob(Z, W), not(X = Y), !.
-
 loomne_toit(X) :- alamklass(X, Y), loomne_toit(Y), !.
 taimne_toit(X) :- alamklass(X, Y), taimne_toit(Y), !.
 
+soob(X, Y) :- 
+    X \= Y, loomne_toit(Y), 
+    (alamklass(X, omnivoor); alamklass(X, karnivoor)), !.
+soob(X, Y) :- 
+    X \= Y, taimne_toit(Y),
+    alamklass(X, omnivoor).
 % söömina vastavalt ajale.
 oo(Aeg) :- Aeg >= 0 , Aeg =< 6, !.
 oo(Aeg) :- Aeg >= 22, Aeg =< 24, !.
 
 soob(Kes, Keda, Millal) :- 
     soob(Kes, Keda), 
-    loomne_toit(Keda),
     oo(Millal), !.
 soob(Kes, Keda, Millal) :-
     soob(Kes, Keda), 
-    taimne_toit(Keda),
-    not(oo(Millal)).
+    \+ oo(Millal).
