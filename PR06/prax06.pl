@@ -66,9 +66,9 @@ oo(Aeg) :- Aeg >= 22, Aeg =< 24.
 
 soob(Kes, Keda, Millal) :- 
     soob(Kes, Keda), 
-    alamklass(Keda, loom), 
+    (alamklass(Keda, loom) ; Keda = loom), 
     oo(Millal), !.
 soob(Kes, Keda, Millal) :-
     soob(Kes, Keda), 
-    alamklass(Keda, taim),
+    (alamklass(Keda, taim) ; Keda = taim),
     not(oo(Millal)).
