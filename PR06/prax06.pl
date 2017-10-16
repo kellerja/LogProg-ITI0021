@@ -30,10 +30,10 @@ kasvab(elusolend).
 
 liigub(loom).
 
-soob(herbivoor, taim).
-soob(karnivoor, loom).
-soob(omnivoor, taim).
-soob(omnivoor, loom).
+soob(herbivoor, taim) :- !.
+soob(karnivoor, loom) :- !.
+soob(omnivoor, taim) :- !.
+soob(omnivoor, loom) :- !.
 
 loomne_toit(loom).
 taimne_toit(taim).
