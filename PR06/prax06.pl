@@ -63,8 +63,11 @@ loomne_toit(X) :- alamklass(X, Y), loomne_toit(Y), !.
 taimne_toit(X) :- alamklass(X, Y), taimne_toit(Y), !.
 
 % söömina vastavalt ajale.
-oo(Aeg) :- Aeg >= 0 , Aeg =< 6, !.
-oo(Aeg) :- Aeg >= 22, Aeg =< 24.
+oo(Aeg) :- Aeg @>= 00:00, Aeg @=< 6:00, !.
+oo(Aeg) :- Aeg @>= 22:00, Aeg @=< 24:00, !.
+
+oo(Aeg) :- Aeg @>= 0 , Aeg @=< 6, !.
+oo(Aeg) :- Aeg @>= 22, Aeg @=< 24, !.
 
 soob(Kes, Keda, Millal) :- 
     soob(Kes, Keda), 
