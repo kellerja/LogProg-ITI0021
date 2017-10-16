@@ -53,9 +53,8 @@ kasvab(X) :- alamklass(X, Y), kasvab(Y), !.
 
 liigub(X) :- alamklass(X, Y), liigub(Y), !.
 
-soob_2(X, Y) :- soob(X, Y).
-soob_2(X, Y) :- alamklass(X, Z), soob_2(Z, Y), not(X = Y), !.
-soob_2(X, Y) :- alamklass(Y, Z), soob_2(X, Z), not(X = Y), !.
+soob(X, Y) :- alamklass(X, Z), soob(Z, Y), not(X = Y), !.
+soob(X, Y) :- alamklass(Y, Z), soob(X, Z), not(X = Y), !.
 %soob(X, Y) :- alamklass(X, Z), alamklass(Y, W), soob(Z, W), not(X = Y), !.
 
 loomne_toit(X) :- alamklass(X, Y), loomne_toit(Y), !.
@@ -66,10 +65,10 @@ oo(Aeg) :- Aeg >= 0 , Aeg =< 6, !.
 oo(Aeg) :- Aeg >= 22, Aeg =< 24, !.
 
 soob(Kes, Keda, Millal) :- 
-    soob_2(Kes, Keda), 
-    alamklass(Keda, loom), 
+    soob(Kes, Keda), 
+    loomne_toit(Keda),
     oo(Millal), !.
 soob(Kes, Keda, Millal) :-
-    soob_2(Kes, Keda), 
-    alamklass(Keda, taim),
+    soob(Kes, Keda), 
+    taimne_toit(Keda),
     not(oo(Millal)).
