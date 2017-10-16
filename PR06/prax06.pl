@@ -31,9 +31,7 @@ kasvab(elusolend).
 liigub(loom).
 
 soob(herbivoor, taim).
-\+ soob(karnivoor, karnivoor).
 soob(karnivoor, loom).
-\+ soob(omnivoor, omnivoor)).
 soob(omnivoor, taim).
 soob(omnivoor, loom).
 
@@ -55,25 +53,23 @@ kasvab(X) :- alamklass(X, Y), kasvab(Y), !.
 
 liigub(X) :- alamklass(X, Y), liigub(Y), !.
 
-soob(X, Y) :- alamklass(X, Z), soob(Z, Y), not(X = Y), !.
-soob(X, Y) :- alamklass(Y, Z), soob(X, Z), not(X = Y), !.
+soob_2(X, Y) :- soob(X, Y).
+soob_2(X, Y) :- alamklass(X, Z), soob_2(Z, Y), not(X = Y), !.
+soob_2(X, Y) :- alamklass(Y, Z), soob_2(X, Z), not(X = Y), !.
 %soob(X, Y) :- alamklass(X, Z), alamklass(Y, W), soob(Z, W), not(X = Y), !.
 
 loomne_toit(X) :- alamklass(X, Y), loomne_toit(Y), !.
 taimne_toit(X) :- alamklass(X, Y), taimne_toit(Y), !.
 
 % söömina vastavalt ajale.
-oo(Aeg) :- Aeg @>= 00:00, Aeg @=< 6:00, !.
-oo(Aeg) :- Aeg @>= 22:00, Aeg @=< 24:00, !.
-
-oo(Aeg) :- Aeg @>= 0 , Aeg @=< 6, !.
-oo(Aeg) :- Aeg @>= 22, Aeg @=< 24, !.
+oo(Aeg) :- Aeg >= 0 , Aeg =< 6, !.
+oo(Aeg) :- Aeg >= 22, Aeg =< 24, !.
 
 soob(Kes, Keda, Millal) :- 
-    soob(Kes, Keda), 
-    (alamklass(Keda, loom) ; Keda = loom), 
+    soob_2(Kes, Keda), 
+    alamklass(Keda, loom), 
     oo(Millal), !.
 soob(Kes, Keda, Millal) :-
-    soob(Kes, Keda), 
-    (alamklass(Keda, taim) ; Keda = taim),
+    soob_2(Kes, Keda), 
+    alamklass(Keda, taim),
     not(oo(Millal)).
