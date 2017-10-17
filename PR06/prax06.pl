@@ -80,3 +80,5 @@ soob(Kes, Keda, Millal) :-
     \+ oo(Millal),
     taimne_toit(Toit),
     soob_toit(Kes, Keda, Toit).
+ 
+ 

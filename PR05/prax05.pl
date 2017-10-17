@@ -14,7 +14,7 @@ paki([B], [B]).
 paki([A, B|List], X) :-
     A = B, paki([B|List], X), !.
 paki([A, B|List], [A|X]) :-
-    not(A = B), paki([B|List], X).
+    paki([B|List], X).
 
 duplikeeri([], []).
 duplikeeri([H|T],[H, H|X]) :-
