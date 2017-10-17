@@ -71,7 +71,6 @@ soob_toit(Kes, Keda, Toit) :-
     alamklass(Kes, Sooja),
     alamklass(Keda, Toit),
     Kes \= Keda.
-
 soob(Kes, Keda, Millal) :- 
     oo(Millal),
     loomne_toit(Toit),
