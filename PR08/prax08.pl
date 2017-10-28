@@ -18,7 +18,9 @@ hulk(b, 22).
 lind(kotkas).
 lind(emu).
 lind(pingviin).
+lind(tihane).
 % Ülesanne
+lendab(X) :- var(X), lind(X), lendab(X).
 lendab(X) :- X = pingviin, !, fail.
 lendab(X) :- X = emu, !, fail.
 lendab(X) :- lind(X).
