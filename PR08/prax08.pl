@@ -3,12 +3,12 @@ hulk(a, 1).
 hulk(a, 5).
 hulk(a, 7).
 hulk(a, 9).
-hulk(a, 3).
-hulk(a, 24).
+hulk(a, a).
+hulk(a, z).
 hulk(a, 34).
 hulk(a, 2).
 hulk(a, -66).
-hulk(a, 0).
+hulk(a, x).
 
 % Ülesanne
 lendab(X) :- pingviin(X), !, fail.
@@ -40,6 +40,7 @@ min(Hulk, Hulga_nimi, Min_Element) :- vaikseim(Min_Element), retract(vaikseim(Mi
 :- dynamic dynamic_hulk/2.
 set_viimane(Hulga_nimi) :- hulk(Hulga_nimi, X), retractall(viimane(Y)), assertz(viimane(X)), fail.
 loo_dynamic_hulk(Hulga_nimi) :- hulk(Hulga_nimi, X), assertz(dynamic_hulk(Hulga_nimi, X)), fail.
+eemalda_dynamic_hulk(Hulga_nimi) :- retractall(dynamic_hulk(Hulga_nimi, Z)).
 
 add_to_list(Element) :- 
     temp_hulk(Y), 
@@ -48,14 +49,14 @@ add_to_list(Element) :-
     assertz(temp_hulk(Temp)), !.
 
 jarjestus(Hulga_nimi, List) :-
-    assertz(temp_hulk([])),
     not(loo_dynamic_hulk(Hulga_nimi)),
     max(Hulga_nimi, Maksimum),
+    assertz(temp_hulk([])),    
     repeat,
-    dynamic_hulk(Hulga_nimi, Element),
     min(dynamic_hulk, Hulga_nimi, Miinimum),
+    add_to_list(Miinimum),    
     retract(dynamic_hulk(Hulga_nimi, Miinimum)),
-    add_to_list(Miinimum),
-    Maksimum = Miinimum, 
+    Maksimum = Miinimum,
     temp_hulk(List),
+    eemalda_dynamic_hulk(Hulga_nimi),
     retract(temp_hulk(List)), !.
