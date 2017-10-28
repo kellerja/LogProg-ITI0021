@@ -52,14 +52,14 @@ viimane_element(Hulga_nimi) :-
 
 jarjestus(Hulga_nimi, List) :-
     retractall(ajutine_list(Z)),
-    hulk(Hulga_nimi, _),
+    var(List),
+    (nonvar(Hulga_nimi), hulk(Hulga_nimi, _); var(Hulga_nimi)),
     repeat,
     not(viimane_element(Hulga_nimi)),
     viimane(Hulga_nimi, Viimane),
     hulk(Hulga_nimi, Element),
     lisa_listi(Element),
     Element = Viimane,
-    ajutine_list(Ajutine_list),
-    retractall(ajutine_list(Ajutine_list)),
-    retractall(viimane(Hulga_nimi, T)), !,
-    List = Ajutine_list.
+    ajutine_list(List),
+    retractall(ajutine_list(List)),
+    retractall(viimane(Hulga_nimi, T)).
