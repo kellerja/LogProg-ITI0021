@@ -9,6 +9,11 @@ hulk(a, 34).
 hulk(a, 2).
 hulk(a, -66).
 hulk(a, x).
+hulk(b, 5).
+hulk(b, 7).
+hulk(b, 0).
+hulk(b, 33).
+hulk(b, 22).
 
 % Ülesanne
 lendab(X) :- pingviin(X), !, fail.
@@ -43,13 +48,13 @@ lisa_listi(Element) :-
 
 viimane_element(Hulga_nimi) :- 
     hulk(Hulga_nimi, Hulga_element), 
-    retractall(viimane(Z)), 
-    assertz(viimane(Hulga_element)), 
+    retractall(viimane(Hulga_nimi, Z)), 
+    assertz(viimane(Hulga_nimi, Hulga_element)), 
     fail.
 
 jarjestus(Hulga_nimi, List) :-
     not(viimane_element(Hulga_element)),
-    viimane(Viimane),
+    viimane(Hulga_nimi, Viimane),
     repeat,
     hulk(Hulga_nimi, Element),
     lisa_listi(Element),
