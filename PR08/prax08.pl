@@ -36,8 +36,6 @@ lisa_listi(Element, [H|T], [Element, H|T]) :-
     Element @< H.
 lisa_listi(Element, [H|T], [H|Temp]) :- lisa_listi(Element, T, Temp).
 
-:- dynamic ajutine_list/1.
-
 lisa_listi(Element) :-
     ajutine_list(Y),
     lisa_listi(Element, Y, Temp),
@@ -53,12 +51,15 @@ viimane_element(Hulga_nimi) :-
     fail.
 
 jarjestus(Hulga_nimi, List) :-
-    not(viimane_element(Hulga_element)),
-    viimane(Hulga_nimi, Viimane),
+    retractall(ajutine_list(Z)),
+    hulk(Hulga_nimi, _),
     repeat,
+    not(viimane_element(Hulga_nimi)),
+    viimane(Hulga_nimi, Viimane),
     hulk(Hulga_nimi, Element),
     lisa_listi(Element),
     Element = Viimane,
     ajutine_list(Ajutine_list),
-    retractall(ajutine_list(Ajutine_list)), !,
+    retractall(ajutine_list(Ajutine_list)),
+    retractall(viimane(Hulga_nimi, T)), !,
     List = Ajutine_list.
