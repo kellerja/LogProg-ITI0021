@@ -26,7 +26,7 @@ lind(vares).
 % Ülesanne
 lendab(X) :- X = pingviin, !, fail.
 lendab(X) :- X = emu, !, fail.
-lendab(X)..
+lendab(X).
 
 :- dynamic suurim/1.
 
