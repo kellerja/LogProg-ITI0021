@@ -15,9 +15,12 @@ hulk(b, 0).
 hulk(b, 33).
 hulk(b, 22).
 
+lind(kotkas).
+lind(emu).
+lind(pingviin).
 % Ülesanne
-lendab(X) :- pingviin(X), !, fail.
-lendab(X) :- emu(X), !, fail.
+lendab(X) :- X = pingviin, !, fail.
+lendab(X) :- X = emu, !, fail.
 lendab(X) :- lind(X).
 
 :- dynamic suurim/1.
@@ -26,7 +29,6 @@ suurim(X, Y) :- suurim(Y), !, Y @< X, retract(suurim(Y)), assertz(suurim(X)).
 suurim(X, _) :- assertz(suurim(X)).
 
 max(Hulga_nimi, Max_element) :-
-    fail,
     hulk(Hulga_nimi, Max_element),
     suurim(Max_element, Y),
     fail.
@@ -52,7 +54,6 @@ viimane_element(Hulga_nimi) :-
     fail.
 
 jarjestus(Hulga_nimi, List) :-
-    fail,
     retractall(ajutine_list(Z)),
     var(List),
     (nonvar(Hulga_nimi), hulk(Hulga_nimi, _); var(Hulga_nimi)),
