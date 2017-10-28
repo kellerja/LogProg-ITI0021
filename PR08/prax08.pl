@@ -41,7 +41,7 @@ lisa_listi(Element, [H|T], [H|Temp]) :- lisa_listi(Element, T, Temp).
 lisa_listi(Element) :-
     ajutine_list(Y),
     lisa_listi(Element, Y, Temp),
-    retract(ajutine_list(Y)),
+    retractall(ajutine_list(Y)),
     assertz(ajutine_list(Temp)), !.
 lisa_listi(Element) :-
     assertz(ajutine_list([Element])).
@@ -59,5 +59,6 @@ jarjestus(Hulga_nimi, List) :-
     hulk(Hulga_nimi, Element),
     lisa_listi(Element),
     Element = Viimane,
-    ajutine_list(List),
-    retract(ajutine_list(List)), !.
+    ajutine_list(Ajutine_list),
+    retractall(ajutine_list(Ajutine_list)), !,
+    List = Ajutine_list.
