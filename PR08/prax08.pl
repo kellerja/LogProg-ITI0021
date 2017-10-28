@@ -26,37 +26,33 @@ max(Hulga_nimi, Max_element) :-
     fail.
 max(Hulga_nimi, Max_element) :- suurim(Max_element), retract(suurim(Max_element)).
 
-:- dynamic vaikseim/1.
-vaikseim(X, Y) :- vaikseim(Y), !, Y @> X, retract(vaikseim(Y)), assertz(vaikseim(X)).
-vaikseim(X, _) :- assertz(vaikseim(X)).
+lisa_listi(Element, [], [Element]).
+lisa_listi(Element, [H|T], [Element, H|T]) :-
+    Element @< H.
+lisa_listi(Element, [H|T], [H|Temp]) :- lisa_listi(Element, T, Temp).
 
-min(Hulk, Hulga_nimi, Min_Element) :- 
-    Term =.. [Hulk, Hulga_nimi, Min_Element],
-    Term,
-    vaikseim(Min_Element, Y),
+:- dynamic ajutine_list/1.
+
+lisa_listi(Element) :-
+    ajutine_list(Y),
+    lisa_listi(Element, Y, Temp),
+    retract(ajutine_list(Y)),
+    assertz(ajutine_list(Temp)), !.
+lisa_listi(Element) :-
+    assertz(ajutine_list([Element])).
+
+viimane_element(Hulga_nimi) :- 
+    hulk(Hulga_nimi, Hulga_element), 
+    retractall(viimane(Z)), 
+    assertz(viimane(Hulga_element)), 
     fail.
-min(Hulk, Hulga_nimi, Min_Element) :- vaikseim(Min_Element), retract(vaikseim(Min_Element)).
-
-:- dynamic dynamic_hulk/2.
-set_viimane(Hulga_nimi) :- hulk(Hulga_nimi, X), retractall(viimane(Y)), assertz(viimane(X)), fail.
-loo_dynamic_hulk(Hulga_nimi) :- hulk(Hulga_nimi, X), assertz(dynamic_hulk(Hulga_nimi, X)), fail.
-eemalda_dynamic_hulk(Hulga_nimi) :- retractall(dynamic_hulk(Hulga_nimi, Z)).
-
-add_to_list(Element) :- 
-    temp_hulk(Y), 
-    append(Y, [Element], Temp),
-    retract(temp_hulk(Y)), 
-    assertz(temp_hulk(Temp)), !.
 
 jarjestus(Hulga_nimi, List) :-
-    not(loo_dynamic_hulk(Hulga_nimi)),
-    max(Hulga_nimi, Maksimum),
-    assertz(temp_hulk([])),    
+    not(viimane_element(Hulga_element)),
+    viimane(Viimane),
     repeat,
-    min(dynamic_hulk, Hulga_nimi, Miinimum),
-    add_to_list(Miinimum),    
-    retract(dynamic_hulk(Hulga_nimi, Miinimum)),
-    Maksimum = Miinimum,
-    temp_hulk(List),
-    eemalda_dynamic_hulk(Hulga_nimi),
-    retract(temp_hulk(List)), !.
+    hulk(Hulga_nimi, Element),
+    lisa_listi(Element),
+    Element = Viimane,
+    ajutine_list(List),
+    retract(ajutine_list(List)), !.
