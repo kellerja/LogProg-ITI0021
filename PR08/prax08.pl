@@ -26,6 +26,7 @@ suurim(X, Y) :- suurim(Y), !, Y @< X, retract(suurim(Y)), assertz(suurim(X)).
 suurim(X, _) :- assertz(suurim(X)).
 
 max(Hulga_nimi, Max_element) :-
+    fail,
     hulk(Hulga_nimi, Max_element),
     suurim(Max_element, Y),
     fail.
