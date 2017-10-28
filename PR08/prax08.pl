@@ -51,6 +51,7 @@ viimane_element(Hulga_nimi) :-
     fail.
 
 jarjestus(Hulga_nimi, List) :-
+    fail,
     retractall(ajutine_list(Z)),
     var(List),
     (nonvar(Hulga_nimi), hulk(Hulga_nimi, _); var(Hulga_nimi)),
