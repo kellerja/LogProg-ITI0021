@@ -24,9 +24,8 @@ lind(tihane).
 lind(vares).
 
 % Ülesanne
-lendab(X) :- X = pingviin, !, fail.
-lendab(X) :- X = emu, !, fail.
-lendab(X).
+lendab(X) :- (X = pingviin; X = emu), !, fail.
+lendab(X) :- lind(X).
 
 :- dynamic suurim/1.
 
