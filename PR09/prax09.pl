@@ -77,7 +77,7 @@ aegade_vordlus(time(H1, M1, S1), time(H2, M2, S2), Tulemus) :-
     Tulemus is sign((H1*60*60 + M1*60 + S1) - (H2*60*60 + M2*60 + S2)).
 
 oote_aeg(time(H1, M, S), time(H2, M, S)) :-
-    H1 < 1, H2 is 24 + H1.
+    H1 < 1, H2 is 24 + H1, !.
 oote_aeg(time(H, M, S), time(H, M, S)).
 
 tee_aeg(mine(Kust, Kuhu, Soiduk), Aeg, Eelmise_saabumise_aeg) :- 
@@ -95,16 +95,25 @@ tee_aeg(mine(Kust, Kuhu, Soiduk, Jargine_tee), Aeg, Eelmise_saabumise_aeg) :-
     aegade_summa(Oote_aeg, Soidu_aeg, Solme_aeg),
     aegade_summa(Jargmise_tee_aeg, Solme_aeg, Aeg).
 
+tee_aeg(mine(Kust, Kuhu, Soiduk), Aeg) :- 
+    Term =.. [Soiduk, Kust, Kuhu, _, Valjumise_aeg, Saabumise_aeg], Term,
+    aegade_vahe(Saabumise_aeg, Valjumise_aeg, Aeg).
+tee_aeg(mine(Kust, Kuhu, Soiduk, Jargine_tee), Aeg) :-
+    Term =.. [Soiduk, Kust, Kuhu, _, Valjumise_aeg, Saabumise_aeg], Term,
+    tee_aeg(Jargine_tee, Jargmise_tee_aeg, Saabumise_aeg),
+    aegade_vahe(Saabumise_aeg, Valjumise_aeg, Soidu_aeg),
+    aegade_summa(Jargmise_tee_aeg, Soidu_aeg, Aeg).
+
 on_lyhim_reis(Tee) :-
     parim_lyhim_reis_aeg(Parim_aeg),
-    tee_aeg(Tee, Aeg, time(0, 0, 0)),
+    tee_aeg(Tee, Aeg),
     aegade_vordlus(Parim_aeg, Aeg, Tulemus),
-    Tulemus < 0,
+    Tulemus > 0,
     retract(parim_lyhim_reis_aeg(Parim_aeg)),
     asserta(parim_lyhim_reis_aeg(Aeg)).
 on_lyhim_reis(Tee) :-
     \+ parim_lyhim_reis_aeg(_),
-    tee_aeg(Tee, Aeg, time(0, 0, 0)),
+    tee_aeg(Tee, Aeg),
     assert(parim_lyhim_reis_aeg(Aeg)).
 
 lyhim_reis(_, _, _, _) :-
