@@ -25,7 +25,7 @@ lind(vares).
 
 % Ülesanne
 lendab(X) :- (X = pingviin; X = emu), !, fail.
-lendab(X).
+lendab(_).
 
 :- dynamic suurim/1.
 
@@ -34,9 +34,9 @@ suurim(X, _) :- assertz(suurim(X)).
 
 max(Hulga_nimi, Max_element) :-
     hulk(Hulga_nimi, Max_element),
-    suurim(Max_element, Y),
+    suurim(Max_element, _),
     fail.
-max(Hulga_nimi, Max_element) :- suurim(Max_element), retract(suurim(Max_element)).
+max(_, Max_element) :- suurim(Max_element), retract(suurim(Max_element)).
 
 lisa_listi(Element, [], [Element]).
 lisa_listi(Element, [H|T], [Element, H|T]) :-
@@ -70,3 +70,13 @@ jarjestus(Hulga_nimi, List) :-
     ajutine_list(List),
     retractall(ajutine_list(List)),
     retractall(viimane(Hulga_nimi, T)).
+
+% ristkorrutis
+ristkorrutis(_, [], []).
+ristkorrutis([], _, []).
+ristkorrutis([X|A], B, Result) :-
+    ristkorrutis(X, B, Result1),
+    ristkorrutis(A, B, Result2), !,
+    append(Result1, Result2, Result).
+ristkorrutis(X, [Y|B], [[X, Y]|Result]) :-
+    ristkorrutis(X, B, Result).
