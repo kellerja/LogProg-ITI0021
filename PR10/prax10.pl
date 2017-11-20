@@ -11,3 +11,4 @@ omadussona --> [].
 maarsona --> [upakile].
 maarsona --> [].
 tegusona --> [ei_kasva];[ajab];[tuleb];[laheb];[jaavad].
+
