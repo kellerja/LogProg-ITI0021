@@ -1,5 +1,5 @@
-liitlause --> lihtlause, lihtlause, lihtlause.
 liitlause --> lihtlause, lihtlause.
+liitlause --> liitlause, lihtlause.
 lihtlause --> nimisonafraas, tegusonafraas.
 nimisonafraas --> omadussonafraas, nimisona.
 omadussonafraas --> maarsona, omadussona.
@@ -12,4 +12,3 @@ omadussona --> [].
 maarsona --> [ei];[upakile].
 maarsona --> [].
 tegusona --> [kasva];[ajab];[tuleb];[laheb];[jaavad].
-
