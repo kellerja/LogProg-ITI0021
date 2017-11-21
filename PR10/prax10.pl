@@ -2,12 +2,12 @@ liitlause --> lihtlause, lihtlause, lihtlause.
 lihtlause --> nimisonafraas, tegusonafraas.
 nimisonafraas --> omadussonafraas, nimisona.
 omadussonafraas --> maarsona, omadussona.
-tegusonafraas --> tegusona, nimisonafraas.
-tegusonafraas --> nimisonafraas, tegusona.
+tegusonafraas --> maarsona, tegusona, nimisonafraas.
+tegusonafraas --> nimisonafraas, maarsona, tegusona.
 nimisona --> [].
 nimisona --> [kivile];[sammal];[uhkus];[raha];[volad].
 omadussona --> [veerevale].
 omadussona --> [].
-maarsona --> [upakile].
+maarsona --> [ei];[upakile].
 maarsona --> [].
-tegusona --> [ei_kasva];[ajab];[tuleb];[laheb];[jaavad].
+tegusona --> [kasva];[ajab];[tuleb];[laheb];[jaavad].
