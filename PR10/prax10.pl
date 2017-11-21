@@ -1,11 +1,10 @@
-liitlause --> lihtlause, lihtlause.
-liitlause --> liitlause, lihtlause.
+liitlause --> lihtlause, kirjavahemark, lihtlause.
+liitlause --> lihtlause, kirjavahemark, liitlause.
 lihtlause --> nimisonafraas, tegusonafraas.
 nimisonafraas --> omadussonafraas, nimisona.
-nimisonafraas --> nimisona, maarsona.
 omadussonafraas --> maarsona, omadussona.
-tegusonafraas --> nimisonafraas, tegusona, nimisonafraas.
-tegusonafraas --> nimisonafraas, tegusona.
+tegusonafraas --> maarsona, tegusona, nimisonafraas.
+tegusonafraas --> nimisonafraas, maarsona, tegusona.
 nimisona --> [].
 nimisona --> [kivile];[sammal];[uhkus];[raha];[volad].
 omadussona --> [veerevale].
@@ -13,3 +12,4 @@ omadussona --> [].
 maarsona --> [ei];[upakile].
 maarsona --> [].
 tegusona --> [kasva];[ajab];[tuleb];[laheb];[jaavad].
+kirjavahemark --> [,].
