@@ -182,7 +182,7 @@ status:-
 	status_row(4),
 	status_row(3),
 	status_row(2),
-	status_row(1).
+	status_row(1), !.
 
 %=================== Print checkers board v2 - End ====================
 
