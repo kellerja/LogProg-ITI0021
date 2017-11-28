@@ -1,4 +1,4 @@
-:- dynamic ruut/2.
+:- dynamic ruut/3.
 
 main(MyColor):-
     ruut(X,Y, MyColor), 
