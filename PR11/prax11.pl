@@ -11,21 +11,33 @@ game_loop() :-
     status.
 
 main(MyColor):-
-    ruut(X,Y, MyColor), 
-    leia_suund(MyColor,Suund),
+    (ruut(X,Y, MyColor); Tamm is MyColor * 10, ruut(X, Y, Tamm)),
+    leia_suund(MyColor,Suund1),
+    (Tamm is MyColor * 10, ruut(X, Y, Tamm), Suund is -Suund, Suund is Suund1),
     votmine(X, Y, Suund, X1, Y1, MyColor),
-    nl, write([MyColor, 'Nupp ', ruudul, X,Y, 'vottis ja on nyyd', X1, Y1]),    
+    nl, write([MyColor, 'Nupp ', ruudul, X,Y, ' vottis ja on nyyd ', X1, Y1]), !,
+    (muuda_tammiks(X1, Y1, MyColor), nl, write(['Nyyd tamm']); true),   
     !.
 main(MyColor) :-
-    ruut(X, Y, MyColor),
+    (ruut(X, Y, MyColor); Tamm is MyColor * 10, ruut(X, Y, Tamm)),
     leia_suund(MyColor, Suund),
     kaimine(X, Y, Suund, X1, Y1),
-    nl, write([MyColor, 'Nupp', ruudul, X, Y, 'kais ruudule', X1, Y1]),
+    nl, write([MyColor, 'Nupp', ruudul, X, Y, ' kais ruudule ', X1, Y1]), !,
+    (muuda_tammiks(X1, Y1, MyColor), nl, write(['Nyyd tamm']); true),
     !.
 main(_).
 
 leia_suund(1,1):- !.
 leia_suund(2,-1).
+
+muuda_tammiks(X, Y, MyColor) :-
+    kas_muutub_tammiks(X, Y, MyColor),
+    retract(ruut(X, Y, _)),
+    Tamm is MyColor * 10,
+    assert(ruut(X, Y, Tamm)).
+
+kas_muutub_tammiks(8, _, 1).
+kas_muutub_tammiks(1, _, 2).
 
 %--------------------------------
 kaigu_variandid(X,Y,Suund,X1,Y1, MyColor):-
@@ -33,16 +45,16 @@ kaigu_variandid(X,Y,Suund,X1,Y1, MyColor):-
 kaigu_variandid(X,Y,Suund,X1,Y1, _):-
     kaimine(X,Y,Suund,X1,Y1),!.
 %--------------------------------
-:- dynamic on_votnud/1.
-votmine(X,Y,Suund,X1,Y1, MyColor):-
+:- dynamic on_votnud/2.
+votmine(X,Y,Suund,X3,Y3, MyColor):-
     kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor),
     vota(X,Y,Suund,X1,Y1,X2,Y2), 
-    retractall(on_votnud(_)),
-    assert(on_votnud(1)), 
-    votmine(X2, Y2, Suund, _, _, MyColor).
-votmine(X, Y, Suund, X1, Y1, MyColor) :-
-    on_votnud(_),
-    retract(on_votnud(_)).
+    retractall(on_votnud(_, _)),
+    assert(on_votnud(X2, Y2)), 
+    votmine(X2, Y2, Suund, X3, Y3, MyColor).
+votmine(X, Y, Suund, X2, Y2, MyColor) :-
+    on_votnud(X2, Y2),
+    retract(on_votnud(_, _)).
 %--------
 kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor):-  % Votmine edasi paremale
     X1 is X + Suund,
@@ -91,7 +103,6 @@ kas_naaber_vaba(X,Y,Suund,X1,Y1):-
     X1 is X +Suund,
     Y1 is Y -1,
     ruut(X1,Y1, 0), write(' voi ').
-
 kas_naaber_vaba(X,Y,X1,Y1):-
     ruut(X,Y, Status),
     assert(ruut1(X1,Y1, Status)),!.
