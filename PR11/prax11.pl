@@ -1,10 +1,8 @@
-:- dynamic ruut/3.
-
 main(MyColor):-
     ruut(X,Y, MyColor), 
     nl, write([MyColor, 'Nupp ', ruudul, X,Y]),
     leia_suund(MyColor,Suund),
-    kaigu_variandid(X,Y,Suund,X1,Y1, MyColor),
+    kaigu_variandid(X,Y,Suund,X1,Y1),
     !.
 main(_).
 
@@ -12,16 +10,18 @@ leia_suund(1,1):- !.
 leia_suund(2,-1).
 
 %--------------------------------
-kaigu_variandid(X,Y,Suund,X1,Y1, MyColor):-
-    votmine(X,Y,Suund,X1,Y1, MyColor),!.
-kaigu_variandid(X,Y,Suund,X1,Y1, _):-
+kaigu_variandid(X,Y,Suund,X1,Y1):-
+    votmine(X,Y,Suund,X1,Y1),!.
+kaigu_variandid(X,Y,Suund,X1,Y1):-
     kaimine(X,Y,Suund,X1,Y1),!.
 %--------------------------------
-votmine(X,Y,Suund,X1,Y1, MyColor):-
-    kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor),
-    vota(X,Y,Suund,X1,Y1,X2,Y2).
+votmine(X,Y,Suund,X1,Y1):-
+    kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2),
+    
+    vota(X,Y,Suund,X1,Y1,X2,Y2),
+    fail.
 %--------
-kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor):-  % Votmine edasi paremale
+kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2):-  % Votmine edasi paremale
     X1 is X + Suund,
     Y1 is Y + 1,
     ruut(X1,Y1, Color),
@@ -29,7 +29,7 @@ kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor):-  % Votmine edasi paremale
     X2 is X1 + Suund,
     Y2 is Y1 + 1,
     ruut(X2,Y2, 0).
-kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor):-  % Votmine edasi vasakule
+kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2):-  % Votmine edasi vasakule
     X1 is X + Suund,
     Y1 is Y - 1,
     ruut(X1,Y1, Color),
@@ -37,7 +37,7 @@ kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor):-  % Votmine edasi vasakule
     X2 is X1 + Suund,
     Y2 is Y1 - 1,
     ruut(X2,Y2, 0).
-kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor):-  % Votmine tagasi paremale
+kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2):-  % Votmine tagasi paremale
     X1 is X + Suund * -1,
     Y1 is Y + 1,
     ruut(X1,Y1, Color),
@@ -45,7 +45,7 @@ kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor):-  % Votmine tagasi paremale
     X2 is X1 + Suund * -1,
     Y2 is Y1 + 1,
     ruut(X2,Y2, 0).
-kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor):-  % Votmine tagasi vasakule
+kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2):-  % Votmine tagasi vasakule
     X1 is X + Suund * -1,
     Y1 is Y - 1,
     ruut(X1,Y1, Color),
@@ -58,7 +58,9 @@ kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor):-  % Votmine tagasi vasakule
 kaimine(X,Y,Suund,X1,Y1):-
     kas_naaber_vaba(X,Y,Suund,X1,Y1),
     tee_kaik(X,Y,X1,Y1),
-    write([' kaib ', X1,Y1]).
+    write([' kaib ', X1,Y1]),
+    fail.
+kaimine(_,_,_,_,_).
 
 kas_naaber_vaba(X,Y,Suund,X1,Y1):-
     X1 is X +Suund,
