@@ -48,7 +48,7 @@ kas_muutub_tammiks(1, _, 2).
 %--------------------------------
 kaigu_variandid(X, Y, Suund, X1, Y1, MyColor) :-
     ruut(X, Y, Color),
-    Color rem 10 = 0,
+    Color mod 10 = 0,
     votmine_tammega(X, Y, Suund, X1, Y1, MyColor).
 kaigu_variandid(X,Y,Suund,X1,Y1, MyColor):-
     votmine(X,Y,Suund,X1,Y1, MyColor),!.
@@ -99,8 +99,9 @@ kas_saab_votta_tammega(X,Y,Suund,X1,Y1,X2,Y2, suund(Suund, 1), MyColor):-  % Vot
     DeltaY is 1,
     (
         kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2, MyColor);
-        Xtemp is X + DeltaX, Ytemp is Y + DeltaX,
+        Xtemp is X + DeltaX, Ytemp is Y + DeltaY,
         on_valja_piirides(Xtemp, Ytemp),
+        ruut(Xtemp, Ytemp, 0),
         kas_saab_votta_tammega(Xtemp, Ytemp, Suund, X1, Y1, X2, Y2, suund(DeltaX, DeltaY), MyColor)
     ).
 kas_saab_votta_tammega(X,Y,Suund,X1,Y1,X2,Y2, suund(Suund, -1), MyColor):-  % Votmine edasi vasakule
@@ -108,8 +109,9 @@ kas_saab_votta_tammega(X,Y,Suund,X1,Y1,X2,Y2, suund(Suund, -1), MyColor):-  % Vo
     DeltaY is - 1,
     (
         kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2, MyColor);
-        Xtemp is X + DeltaX, Ytemp is Y + DeltaX,
+        Xtemp is X + DeltaX, Ytemp is Y + DeltaY,
         on_valja_piirides(Xtemp, Ytemp),
+        ruut(Xtemp, Ytemp, 0),
         kas_saab_votta_tammega(Xtemp, Ytemp, Suund, X1, Y1, X2, Y2, suund(DeltaX, DeltaY), MyColor)
     ).
 kas_saab_votta_tammega(X,Y,Suund,X1,Y1,X2,Y2, suund(DeltaX, 1), MyColor):-  % Votmine tagasi paremale
@@ -117,8 +119,9 @@ kas_saab_votta_tammega(X,Y,Suund,X1,Y1,X2,Y2, suund(DeltaX, 1), MyColor):-  % Vo
     DeltaY is 1,
     (
         kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2, MyColor);
-        Xtemp is X + DeltaX, Ytemp is Y + DeltaX,
+        Xtemp is X + DeltaX, Ytemp is Y + DeltaY,
         on_valja_piirides(Xtemp, Ytemp),
+        ruut(Xtemp, Ytemp, 0),
         kas_saab_votta_tammega(Xtemp, Ytemp, Suund, X1, Y1, X2, Y2, suund(DeltaX, DeltaY), MyColor)
     ).
 kas_saab_votta_tammega(X,Y,Suund,X1,Y1,X2,Y2, suund(DeltaX, -1), MyColor):-  % Votmine tagasi vasakule
@@ -126,19 +129,21 @@ kas_saab_votta_tammega(X,Y,Suund,X1,Y1,X2,Y2, suund(DeltaX, -1), MyColor):-  % V
     DeltaY is -1,
     (
         kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2, MyColor);
-        Xtemp is X + DeltaX, Ytemp is Y + DeltaX,
+        Xtemp is X + DeltaX, Ytemp is Y + DeltaY,
         on_valja_piirides(Xtemp, Ytemp),
+        ruut(Xtemp, Ytemp, 0),
         kas_saab_votta_tammega(Xtemp, Ytemp, Suund, X1, Y1, X2, Y2, suund(DeltaX, DeltaY), MyColor)
     ).
 
 on_valja_piirides(X, Y) :-
-    X >= 0, Y >= 0, X =< 8, Y =< 8.
+    X >= 1, Y >= 1, X =< 8, Y =< 8.
 
 kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2, MyColor) :-
     X1 is X + DeltaX,
     Y1 is Y + DeltaY,
     ruut(X1,Y1, Color),
-    Color =\= MyColor, Color =\= 0,
+    Tamm is 10 * MyColor,
+    Color =\= MyColor, Color =\= Tamm, Color =\= 0,
     X2 is X1 + DeltaX,
     Y2 is Y1 + DeltaY,
     ruut(X2,Y2, 0).
@@ -146,7 +151,12 @@ kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2, MyColor) :-
 parim_maandumiskoht(X2, Y2, Kaimise_suund, X2, Y2, MyColor).
 %--------------------------------
 kaimine(X,Y,Suund,X1,Y1):-
-    kas_naaber_vaba(X,Y,Suund,X1,Y1),
+    (
+        kas_naaber_vaba(X,Y,Suund,X1,Y1);
+        ruut(X, Y, Varv), V is Varv mod 10, V = 0,
+        Uus_suund = Suund * -1,
+        kas_naaber_vaba(X, Y, Uus_suund, X1, Y1)
+    ),
     tee_kaik(X,Y,X1,Y1),
     write([' kaib ', X1,Y1]).
 
@@ -157,10 +167,7 @@ kas_naaber_vaba(X,Y,Suund,X1,Y1):-
 kas_naaber_vaba(X,Y,Suund,X1,Y1):-
     X1 is X +Suund,
     Y1 is Y -1,
-    ruut(X1,Y1, 0), write(' voi ').
-kas_naaber_vaba(X,Y,X1,Y1):-
-    ruut(X,Y, Status),
-    assert(ruut1(X1,Y1, Status)),!.
+    ruut(X1,Y1, 0).
 
 %---------MÄNGU ALGSEIS-------------
 % Valged
@@ -246,9 +253,9 @@ print_row_squares(_, _) :- !.
 %=================== Print checkers board v2 - Start ==================
 status_sq(ROW,COL):-
 	(	ruut(ROW,COL,COLOR),
-		write(COLOR)
+        write(COLOR), (Tamm is COLOR mod 10, COLOR =\= 0, Tamm = 0; write(' '))
 	);(
-		write(' ')
+		write('  ')
 	).
 status_row(ROW):-
 	write('row # '),write(ROW), write('   '),
