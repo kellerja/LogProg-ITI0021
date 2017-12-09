@@ -48,8 +48,8 @@ kas_muutub_tammiks(1, _, 2).
 %--------------------------------
 kaigu_variandid(X, Y, Suund, X1, Y1, MyColor) :-
     ruut(X, Y, Color),
-    Z is Color mod 10,
-    Z = 0,
+    V is Color mod 10,
+    V = 0,
     votmine_tammega(X, Y, Suund, X1, Y1, MyColor), !.
 kaigu_variandid(X,Y,Suund,X1,Y1, MyColor):-
     votmine(X,Y,Suund,X1,Y1, MyColor),!.
