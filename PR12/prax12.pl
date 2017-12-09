@@ -46,18 +46,19 @@ kas_muutub_tammiks(8, _, 1).
 kas_muutub_tammiks(1, _, 2).
 
 %--------------------------------
-kaigu_variandid(X, Y, Suund, X1, Y1, MyColor) :-
+kaigu_variandid(X, Y, Suund, X1, Y1) :-
     ruut(X, Y, Color),
     V is Color mod 10,
     V = 0,
-    votmine_tammega(X, Y, Suund, X1, Y1, MyColor), !.
-kaigu_variandid(X,Y,Suund,X1,Y1, MyColor):-
-    votmine(X,Y,Suund,X1,Y1, MyColor),!.
-kaigu_variandid(X,Y,Suund,X1,Y1, _):-
+    votmine_tammega(X, Y, Suund, X1, Y1), !.
+kaigu_variandid(X,Y,Suund,X1,Y1):-
+    votmine(X,Y,Suund,X1,Y1),!.
+kaigu_variandid(X,Y,Suund,X1,Y1):-
     kaimine(X,Y,Suund,X1,Y1),!.
 %--------------------------------
 %:- dynamic on_votnud/2.
-votmine(X,Y,Suund,X3,Y3, MyColor):-
+votmine(X,Y,Suund,X2,Y2):-
+    ruut(X, Y, MyColor),
     kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor),
     vota(X,Y,Suund,X1,Y1,X2,Y2).
 %    retractall(on_votnud(_, _)),
@@ -67,7 +68,8 @@ votmine(X,Y,Suund,X3,Y3, MyColor):-
 %    on_votnud(X2, Y2),
 %    retract(on_votnud(_, _)).
 
-votmine_tammega(X, Y, Suund, X4, Y4, MyColor):-
+votmine_tammega(X, Y, Suund, X3, Y3):-
+    ruut(X, Y, MyColor),
     kas_saab_votta_tammega(X, Y, Suund, X1, Y1, X2, Y2, Kaimise_suund, MyColor),
     parim_maandumiskoht(X2, Y2, Kaimise_suund, X3, Y3, MyColor),
     vota(X, Y, Suund, X1, Y1, X3, Y3).
@@ -159,7 +161,8 @@ kaimine(X,Y,Suund,X1,Y1):-
         kas_naaber_vaba(X, Y, Uus_suund, X1, Y1)
     ),
     tee_kaik(X,Y,X1,Y1),
-    write([' kaib ', X1,Y1]).
+    write([' kaib ', X1,Y1]), fail.
+kaimine(_, _, _, _, _).
 
 kas_naaber_vaba(X,Y,Suund,X1,Y1):-
     X1 is X +Suund,
@@ -168,7 +171,7 @@ kas_naaber_vaba(X,Y,Suund,X1,Y1):-
 kas_naaber_vaba(X,Y,Suund,X1,Y1):-
     X1 is X +Suund,
     Y1 is Y -1,
-    ruut(X1,Y1, 0).
+    ruut(X1,Y1, 0), write(' voi ').
 
 %---------MÄNGU ALGSEIS-------------
 % Valged
