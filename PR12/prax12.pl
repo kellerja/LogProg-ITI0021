@@ -48,34 +48,35 @@ kas_muutub_tammiks(1, _, 2).
 %--------------------------------
 kaigu_variandid(X, Y, Suund, X1, Y1, MyColor) :-
     ruut(X, Y, Color),
-    Color mod 10 = 0,
+    Z is Color mod 10,
+    Z = 0,
     votmine_tammega(X, Y, Suund, X1, Y1, MyColor), !.
 kaigu_variandid(X,Y,Suund,X1,Y1, MyColor):-
     votmine(X,Y,Suund,X1,Y1, MyColor),!.
 kaigu_variandid(X,Y,Suund,X1,Y1, _):-
     kaimine(X,Y,Suund,X1,Y1),!.
 %--------------------------------
-:- dynamic on_votnud/2.
+%:- dynamic on_votnud/2.
 votmine(X,Y,Suund,X3,Y3, MyColor):-
     kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor),
-    vota(X,Y,Suund,X1,Y1,X2,Y2), 
-    retractall(on_votnud(_, _)),
-    assert(on_votnud(X2, Y2)), 
-    votmine(X2, Y2, Suund, X3, Y3, MyColor).
-votmine(X, Y, Suund, X2, Y2, MyColor) :-
-    on_votnud(X2, Y2),
-    retract(on_votnud(_, _)).
+    vota(X,Y,Suund,X1,Y1,X2,Y2).
+%    retractall(on_votnud(_, _)),
+%    assert(on_votnud(X2, Y2)), 
+%    votmine(X2, Y2, Suund, X3, Y3, MyColor).
+%votmine(X, Y, Suund, X2, Y2, MyColor) :-
+%    on_votnud(X2, Y2),
+%    retract(on_votnud(_, _)).
 
 votmine_tammega(X, Y, Suund, X4, Y4, MyColor):-
     kas_saab_votta_tammega(X, Y, Suund, X1, Y1, X2, Y2, Kaimise_suund, MyColor),
     parim_maandumiskoht(X2, Y2, Kaimise_suund, X3, Y3, MyColor),
-    vota(X, Y, Suund, X1, Y1, X3, Y3),
-    retractall(on_votnud(_, _)),
-    assert(on_votnud(X3, Y3)),
-    votmine_tammega(X3, Y3, Suund, X4, Y4, MyColor).
-votmine_tammega(_, _, _, X2, Y2, _):-
-    on_votnud(X2, Y2),
-    retract(on_votnud(_, _)).
+    vota(X, Y, Suund, X1, Y1, X3, Y3).
+%    retractall(on_votnud(_, _)),
+%    assert(on_votnud(X3, Y3)),
+%    votmine_tammega(X3, Y3, Suund, X4, Y4, MyColor).
+%votmine_tammega(_, _, _, X2, Y2, _):-
+%    on_votnud(X2, Y2),
+%    retract(on_votnud(_, _)).
 %--------
 kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2, MyColor):-  % Votmine edasi paremale
     DeltaX is Suund,
