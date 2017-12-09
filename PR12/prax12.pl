@@ -14,13 +14,13 @@ main(MyColor):-
     Tamm is MyColor * 10,
     ruut(X,Y, Tamm),
     leia_suund(MyColor,Suund),
-    votmine_tammega(X, Y, Suund, X1, Y1, MyColor),
+    votmine_tammega(X, Y, Suund, X1, Y1),
     nl, write([MyColor, 'Nupp ', ruudul, X,Y, ' vottis ja on nyyd ', X1, Y1]), 
     !.
 main(MyColor):-
     ruut(X,Y, MyColor),
     leia_suund(MyColor,Suund),
-    votmine(X, Y, Suund, X1, Y1, MyColor),
+    votmine(X, Y, Suund, X1, Y1),
     nl, write([MyColor, 'Nupp ', ruudul, X,Y, ' vottis ja on nyyd ', X1, Y1]), !,
     (muuda_tammiks(X1, Y1, MyColor), nl, write(['Nyyd tamm']); true),   
     !.
@@ -160,9 +160,7 @@ kaimine(X,Y,Suund,X1,Y1):-
         Uus_suund = Suund * -1,
         kas_naaber_vaba(X, Y, Uus_suund, X1, Y1)
     ),
-    tee_kaik(X,Y,X1,Y1),
-    write([' kaib ', X1,Y1]), fail.
-kaimine(_, _, _, _, _).
+    tee_kaik(X,Y,X1,Y1).
 
 kas_naaber_vaba(X,Y,Suund,X1,Y1):-
     X1 is X +Suund,
@@ -171,7 +169,7 @@ kas_naaber_vaba(X,Y,Suund,X1,Y1):-
 kas_naaber_vaba(X,Y,Suund,X1,Y1):-
     X1 is X +Suund,
     Y1 is Y -1,
-    ruut(X1,Y1, 0), write(' voi ').
+    ruut(X1,Y1, 0).
 
 %---------MÄNGU ALGSEIS-------------
 % Valged
