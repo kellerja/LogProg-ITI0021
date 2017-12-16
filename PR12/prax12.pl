@@ -69,7 +69,8 @@ votmine(X,Y,Suund,X2,Y2):-
 %    retract(on_votnud(_, _)).
 
 votmine_tammega(X, Y, Suund, X3, Y3):-
-    ruut(X, Y, MyColor),
+    ruut(X, Y, Color),
+    MyColor is Color / 10,
     kas_saab_votta_tammega(X, Y, Suund, X1, Y1, X2, Y2, Kaimise_suund, MyColor),
     parim_maandumiskoht(X2, Y2, Kaimise_suund, X3, Y3, MyColor),
     vota(X, Y, Suund, X1, Y1, X3, Y3).
