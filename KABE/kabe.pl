@@ -1,326 +1,295 @@
-% :- module(arbiter, [peapredikaat/3]).
-% :- export(iapb155243/3).
+% Alfa-beta algoritmi loomisel on aluseks: http://colin.barker.pagesperso-orange.fr/lpa/tictac.htm
 
-iapb155243(Color, 0, 0) :- 
-    ruut(X, Y, Color),
-    tamm(Color),
-    leia_suund(Color, Suund),
-    votmine_tammiga(X, Y, Suund, _, _),
+iapb155243(Color, 0, 0) :-
+    enemy(Color, Enemy),
+    retractall(min_player(_)),
+    retractall(max_player(_)),
+    assert(min_player(Enemy)),
+    assert(max_player(Color)),
+    Depth = 6,
+    alfabeta(Color, Depth, -999999, 999999, Best_move, _),
+    (Best_move = capture([H|_]), make_move(H, _, _); make_move(Best_move, _, _)),
     !.
-iapb155243(Color, 0, 0) :- 
-    ruut(X, Y, Color),
-    leia_suund(Color, Suund),
-    votmine(X, Y, Suund, _, _),
-    !.
-iapb155243(Color, 0, 0) :- 
-    ruut(X, Y, Color),
-    leia_suund(Color, Suund),
-    kaimine(X, Y, Suund, _, _),
-    !.
-iapb155243(Color, X, Y) :- 
-    leia_suund(Color, Suund),
-    votmine(X, Y, Suund, _, _),
-    !.
+iapb155243(Color, X, Y) :-
+    direction(Color, Direction),
+    can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color),
+    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), _, _).
 iapb155243(_, _, _).
 
-leia_suund(1,1):- !.
-leia_suund(2,-1).
+enemy(1, 2) :- !.
+enemy(2, 1).
 
-color(BoardPiece, Color) :-
-    Z is BoardPiece mod 10,
-    Z = 0,
-    X is BoardPiece / 10,
-    Color = X, !.
-color(BoardPiece, BoardPiece).
+direction(1, 1) :- !.
+direction(2, -1).
 
-tamm(BoardPiece) :-
-    V is BoardPiece mod 10, V = 0.
+color(1, 1) :- !.
+color(10, 1) :- !.
+color(2, 2) :- !.
+color(20, 2) :- !.
+color(0, 0).
 
-votmine(X,Y,Suund,X2,Y2):-
-    kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2),
-    vota(X,Y,Suund,X1,Y1,X2,Y2).
+tamm(10) :- !.
+tamm(20).
 
-votmine_tammiga(X, Y, Suund, X1, Y1, X3, Y3):-
-    kas_saab_votta_tammiga(X, Y, Suund, X1, Y1, X2, Y2, Kaimise_suund),
-    parim_maandumiskoht(X2, Y2, Kaimise_suund, X3, Y3).
+tamm(1, 10) :- !.
+tamm(10, 10) :- !.
+tamm(2, 20) :- !.
+tamm(20, 20).
 
-parim_maandumiskoht(X2, Y2, Kaimise_suund, X2, Y2).
-
-kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2):-  % Votmine edasi paremale
-    DeltaX is Suund,
-    DeltaY is 1,
-    kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2).
-kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2):-  % Votmine edasi vasakule
-    DeltaX is Suund,
-    DeltaY is - 1,
-    kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2).
-kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2):-  % Votmine tagasi paremale
-    DeltaX is Suund * -1,
-    DeltaY is 1,
-    kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2).
-kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2):-  % Votmine tagasi vasakule
-    DeltaX is Suund * -1,
-    DeltaY is -1,
-    kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2).
-
-kas_saab_votta_tammiga(X,Y,Suund,X1,Y1,X2,Y2, suund(Suund, 1)):-  % Votmine edasi paremale
-    DeltaX is Suund,
-    DeltaY is 1,
-    (
-        kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2);
-        Xtemp is X + DeltaX, Ytemp is Y + DeltaY,
-        on_valja_piirides(Xtemp, Ytemp),
-        ruut(Xtemp, Ytemp, 0),
-        kas_saab_votta_tammiga(Xtemp, Ytemp, Suund, X1, Y1, X2, Y2, suund(DeltaX, DeltaY))
-    ).
-kas_saab_votta_tammiga(X,Y,Suund,X1,Y1,X2,Y2, suund(Suund, -1)):-  % Votmine edasi vasakule
-    DeltaX is Suund,
-    DeltaY is - 1,
-    (
-        kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2);
-        Xtemp is X + DeltaX, Ytemp is Y + DeltaY,
-        on_valja_piirides(Xtemp, Ytemp),
-        ruut(Xtemp, Ytemp, 0),
-        kas_saab_votta_tammiga(Xtemp, Ytemp, Suund, X1, Y1, X2, Y2, suund(DeltaX, DeltaY))
-    ).
-kas_saab_votta_tammiga(X,Y,Suund,X1,Y1,X2,Y2, suund(DeltaX, 1)):-  % Votmine tagasi paremale
-    DeltaX is Suund * -1,
-    DeltaY is 1,
-    (
-        kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2);
-        Xtemp is X + DeltaX, Ytemp is Y + DeltaY,
-        on_valja_piirides(Xtemp, Ytemp),
-        ruut(Xtemp, Ytemp, 0),
-        kas_saab_votta_tammiga(Xtemp, Ytemp, Suund, X1, Y1, X2, Y2, suund(DeltaX, DeltaY))
-    ).
-kas_saab_votta_tammiga(X,Y,Suund,X1,Y1,X2,Y2, suund(DeltaX, -1)):-  % Votmine tagasi vasakule
-    DeltaX is Suund * -1,
-    DeltaY is -1,
-    (
-        kas_saab_votta_yldistus(X,Y, DeltaX, DeltaY,X1,Y1,X2,Y2);
-        Xtemp is X + DeltaX, Ytemp is Y + DeltaY,
-        on_valja_piirides(Xtemp, Ytemp),
-        ruut(Xtemp, Ytemp, 0),
-        kas_saab_votta_tammiga(Xtemp, Ytemp, Suund, X1, Y1, X2, Y2, suund(DeltaX, DeltaY))
-    ).
-
-on_valja_piirides(X, Y) :-
+in_gameboard_bounds(X, Y) :-
     X >= 1, Y >= 1, X =< 8, Y =< 8.
 
-kas_saab_votta_yldistus(X, Y, DeltaX, DeltaY, X1, Y1, X2, Y2) :-
-    ruut(X, Y, BoardPiece),
-    color(BoardPiece, MyColor),
-    X1 is X + DeltaX,
-    Y1 is Y + DeltaY,
-    ruut(X1,Y1, Color),
-    Tamm is 10 * MyColor,
-    Color =\= MyColor, Color =\= Tamm, Color =\= 0,
-    X2 is X1 + DeltaX,
-    Y2 is Y1 + DeltaY,
-    ruut(X2,Y2, 0).
-
-kaimine(X,Y,Suund,X1,Y1):-
+heuristics(Color, _) :-
+    retractall(heuristics(_)),
+    assert(heuristics(0)),
+    ruut(_, _, Piece),
+    color(Piece, PieceColor),
+    retract(heuristics(Value)),
     (
-        kas_naaber_vaba(X,Y,Suund,X1,Y1);
-        ruut(X, Y, Varv), tamm(Varv),
-        Uus_suund = Suund * -1,
-        kas_naaber_vaba(X, Y, Uus_suund, X1, Y1)
+        Color = PieceColor, 
+        (
+            tamm(PieceColor), New_value is Value + 10;
+            \+ tamm(PieceColor), New_value is Value + 2
+        );
+        enemy(Color, PieceColor),
+        (
+            tamm(PieceColor), New_value is Value - 5;
+            \+ tamm(PieceColor), New_value is Value - 1
+        );
+        PieceColor = 0, New_value is Value
     ),
-    tee_kaik(X,Y,X1,Y1).
-
-kas_naaber_vaba(X,Y,Suund,X1,Y1):-
-    X1 is X +Suund,
-    Y1 is Y + 1,
-    ruut(X1,Y1, 0).
-kas_naaber_vaba(X,Y,Suund,X1,Y1):-
-    X1 is X +Suund,
-    Y1 is Y -1,
-    ruut(X1,Y1, 0).
-
-vota(X, Y, _, X1, Y1, X2, Y2) :-
-    retract(ruut(X1, Y1, _)),
-    assert(ruut(X1, Y1, 0)),
-    retract(ruut(X, Y, Status)),
-    assert(ruut(X, Y, 0)),
-    retract(ruut(X2, Y2, _)),
-    assert(ruut(X2, Y2, Status)).
-
-vota(X, Y, X1, Y1, X2, Y2) :-
-    retract(ruut(X1, Y1, _)),
-    assert(ruut(X1, Y1, 0)),
-    retract(ruut(X, Y, Status)),
-    assert(ruut(X, Y, 0)),
-    retract(ruut(X2, Y2, _)),
-    assert(ruut(X2, Y2, Status)).
-
-tee_kaik(X,Y,X1,Y1) :-
-    retract(ruut(X, Y, Status)),
-    assert(ruut(X, Y, 0)),
-    retract(ruut(X1, Y1, _)),
-    assert(ruut(X1, Y1, Status)).
-
-kaigu_variandid(Varv, vota_tammiga(X, Y, X1, Y1, X2, Y2)) :-
-    retractall(on_voetud(_)),
-    leia_suund(Varv, Suund),
-    Tamm is Varv * 10, ruut(X, Y, Tamm),
-    votmine_tammiga(X, Y, Suund, X1, Y1, X2, Y2),
-    assert(on_voetud(true)).
-kaigu_variandid(Varv, vota(X, Y, X1, Y1, X2, Y2)) :-
-    leia_suund(Varv, Suund),
-    ruut(X, Y, Varv),
-    kas_saab_votta(X, Y, Suund, X1, Y1, X2, Y2),
-    retract(on_voetud(_)),
-    assert(on_voetud(true)).
-kaigu_variandid(Varv, kai(X, Y, X1,Y1)) :-
-    \+ on_voetud(true),
-    leia_suund(Varv, Suund),
-    ruut(X, Y, Varv),
-    kas_naaber_vaba(X,Y,Suund,X1,Y1).
-
-main(Color, Parim, V) :-
-    vastane(Color, Vastane),
-    retractall(minPlayer(_)),
-    retractall(maxPlayer(_)),
-    assert(minPlayer(Vastane)),
-    assert(maxPlayer(Color)),
-    Depth = 4,
-    minimax(Color, Depth, Parim, V),
-    tee_kaik(Parim).
-
-minimax(Color, 0, Kaik, Val) :-
-    vaartus(Color, Val), !.
-minimax(Color, Depth, Parim, ParimVal) :-
-    findall(Kaik, kaigu_variandid(Color, Kaik), Kaigud),
-    parim(Kaigud, Depth, Color, Parim, ParimVal).
-
-parim([Kaik], Depth, Color, Kaik, ParimVal) :-
-    tee_kaik(Kaik),
-    UusDepth is Depth - 1,
-    vastane(Color, UusColor),
-    minimax(UusColor, UusDepth, _, ParimVal),
-    vota_tagasi(Kaik).
-parim([Kaik|Kaigud], Depth, Color, Parim, ParimVal) :-
-    parim(Kaigud, Depth, Color, AltTee, AltVaartus),    
-    tee_kaik(Kaik),
-    UusDepth is Depth - 1,
-    vastane(Color, UusColor),
-    minimax(UusColor, UusDepth, Tee, Vaartus),
-    vota_tagasi(Kaik),
-    parem(Color, Tee, Vaartus, AltTee, AltVaartus, Parim, ParimVal).
-
-vastane(1, 2).
-vastane(2, 1).
-
-vaartus(_, _) :-
-    retractall(vaartus(_)), assert(vaartus(0)), fail.
-vaartus(Color, _) :-
-    ruut(_, _, C),
-    C \= 0,
-    retract(vaartus(V)),
-    (
-        C = Color, NewV is V + 1, assert(vaartus(NewV));
-        Tamm is Color * 10, C = Tamm, NewV is V + 2, assert(vaartus(NewV));
-        vastane(Color, Vastane), VTamm is Vastane * 10, C = VTamm, NewV is V - 2, assert(vaartus(NewV));
-        vastane(Color, Vastane), C = Vastane, NewV is V - 1, assert(vaartus(NewV))
-        ),
+    assert(heuristics(New_value)), 
     fail.
-vaartus(_, Vaartus) :-
-    retract(vaartus(Vaartus)).
+heuristics(_, Value) :-
+    retract(heuristics(Value)).
 
-parem(Color, Xt, Xv, _, Yv, Xt, Xv) :-
-    minPlayer(Color),
-    Xv > Yv, !.
-parem(Color, Xt, Xv, _, Yv, Xt, Xv) :-
-    maxPlayer(Color),
-    Xv < Yv, !.
-parem(_, _, _, Yt, Yv, Yt, Yv).
+possible_moves_capture(Color, origin(X, Y), []) :-
+    direction(Color, Direction),
+    \+ can_capture(X, Y, Direction, _, _, _, _, Color).
+possible_moves_capture(Color, origin(X, Y), [capture(X, Y, X_enemy, Y_enemy, X_new, Y_new)|Captures]) :-
+    direction(Color, Direction),
+    can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color),
+    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece, Piece),
+    (
+        ruut(X_new, Y_new, C), tamm(C), possible_moves_capture_with_king(Color, origin(X_new, Y_new), Captures);
+        possible_moves_capture(Color, origin(X_new, Y_new), Captures)
+    ),
+    backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece, Piece), !.
 
-tee_kaik(kai(X, Y, X1, Y1)) :-
-    tee_kaik(X, Y, X1, Y1), !.
-tee_kaik(vota(X, Y, X1, Y1, X2, Y2)) :-
-    vota(X, Y, X1, Y1, X2, Y2).
-tee_kaik(vota_tammiga(X, Y, X1, Y1, X2, Y2)) :-
-    vota(X, Y, X1, Y1, X2, Y2).
+possible_moves_capture_with_king(Color, origin(X, Y), []) :-
+    direction(Color, Direction),
+    \+ can_capture_with_king(X, Y, Direction, _, _, _, _, _, Color).
+possible_moves_capture_with_king(Color, origin(X, Y), [capture(X, Y, X_enemy, Y_enemy, X_new, Y_new)|Captures]) :-
+    direction(Color, Direction),
+    can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_newA, Y_newA, Diagonal, Color),
+    best_landing(X_newA, Y_newA, Diagonal, X_new, Y_new),
+    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_memory, Memory),
+    possible_moves_capture_with_king(Color, origin(X_new, Y_new), Captures),
+    backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_memory, Memory), !.
 
-vota_tagasi(kai(X, Y, X1, Y1)) :-
-    tee_kaik(X1, Y1, X, Y), !.
-vota_tagasi(vota(X, Y, X1, Y1, X2, Y2)) :-
+possible_moves(Color, capture(CaptureMove)) :-
+    retractall(has_captured(_)),
+    ruut(X, Y, Color),
+    possible_moves_capture(Color, origin(X, Y), CaptureMove),
+    CaptureMove \= [],
+    assert(has_captured(true)).
+possible_moves(Color, capture(CaptureMove)) :-
+    tamm(Color, King),
+    ruut(X, Y, King),
+    possible_moves_capture_with_king(Color, origin(X, Y), CaptureMove),
+    CaptureMove \= [],
+    retractall(has_captured(_)),
+    assert(has_captured(true)).
+possible_moves(Color, move(X, Y, X_new, Y_new)) :-
+    \+ retract(has_captured(true)),
+    ruut(X, Y, Color),
+    direction(Color, Direction),
+    can_move(X, Y, Direction, X_new, Y_new).
+possible_moves(Color, move(X, Y, X_new, Y_new)) :-
+    \+ retract(has_captured(true)),
+    tamm(Color, King),
+    ruut(X, Y, King),
+    best_move_with_king(X, Y, X_new, Y_new, Color).
+
+alfabeta(Color, 0, _, _, _, Value) :-
+    heuristics(Color, Value), !.
+alfabeta(Color, Depth, Alpha, Beta, Best_move, Best_value) :-
+    findall(Move, possible_moves(Color, Move), Moves),
+    (
+        Moves = [], Best_value = -9999;
+        New_depth is Depth - 1,
+        Alpha1 is -Beta,
+        Beta1 is -Alpha,
+        best(Moves, New_depth, Color, Alpha1, Beta1, 0, Best_move, Best_value)
+    ), !.
+alfabeta(Color, _, _, _, _, Value) :-
+    heuristics(Color, Value).
+
+best([Move|Moves], Depth, Color, Alpha, Beta, Move0, Best_move, Best_value) :-
+    make_move(Move, Enemy_memory, Memory),
+    enemy(Color, Enemy),
+    alfabeta(Enemy, Depth, Alpha, Beta, _, Enemy_value),
+    Value is -Enemy_value,
+    backtrack(Move, Enemy_memory, Memory),
+    cutoff(Move, Moves, Depth, Color, Value, Alpha, Beta, Move0, Best_move, Best_value).
+best([], _, _, Alpha, _, Move, Move, Alpha).
+
+cutoff(_, Moves, Depth, Color, Value, Alpha, Beta, Move0, MoveA, ValueA) :-
+    Value =< Alpha, !,
+    best(Moves, Depth, Color, Alpha, Beta, Move0, MoveA, ValueA).
+cutoff(Move, Moves, Depth, Color, Value, _, Beta, _, MoveA, ValueA) :-
+    Value < Beta, !,
+    best(Moves, Depth, Color, Value, Beta, Move, MoveA, ValueA).
+cutoff(Move, _, _, _, Value, _, _, _, Move, Value).
+
+make_move(capture([]), [], []) :- !.
+make_move(capture([H|T]), [Enemy_piece|Enemies], [Piece|Pieces]) :-
+    make_move(H, Enemy_piece, Piece),
+    make_move(capture(T), Enemies, Pieces), !.
+make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece, Piece) :-
+    retract(ruut(X_enemy, Y_enemy, Enemy_piece)),
+    assert(ruut(X_enemy, Y_enemy, 0)),
+    retract(ruut(X, Y, Piece)),
+    assert(ruut(X, Y, 0)),
+    retract(ruut(X_new, Y_new, _)),
+    assert(ruut(X_new, Y_new, Piece)),
+    make_king(X_new, Y_new), !.
+make_move(move(X, Y, X_new, Y_new), _, Piece) :-
+    retract(ruut(X, Y, Piece)),
+    assert(ruut(X, Y, 0)),
+    retract(ruut(X_new, Y_new, _)),
+    assert(ruut(X_new, Y_new, Piece)),
+    make_king(X_new, Y_new).
+
+make_king(X, Y) :-
+    ruut(X, Y, Piece), 
+    can_make_king(X, Y, Piece),
+    King is Piece * 10,
+    retract(ruut(X, Y, Piece)),
+    assert(ruut(X, Y, King)).
+make_king(_, _).
+
+can_make_king(8, _, 1) :- !.
+can_make_king(1, _, 2).
+
+backtrack_capture([], [], []) :- !.
+backtrack_capture([Move|Moves], [Enemy_piece|Enemies], [Piece|Pieces]) :-
+    backtrack(Move, Enemy_piece, Piece),
+    backtrack_capture(Moves, Enemies, Pieces), !.
+backtrack(capture(Moves), Memory, Pieces) :-
+    reverse(Moves, RevMoves),
+    reverse(Memory, RevMemory),
+    reverse(Pieces, RevPieces),
+    backtrack_capture(RevMoves, RevMemory, RevPieces), !.
+backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece, Piece) :-
+    retract(ruut(X_enemy, Y_enemy, _)),
+    assert(ruut(X_enemy, Y_enemy, Enemy_piece)),
+    retract(ruut(X_new, Y_new, _)),
+    assert(ruut(X_new, Y_new, 0)),
     retract(ruut(X, Y, _)),
-    retract(ruut(X2, Y2, C)),
-    retract(ruut(X1, Y1, _)),
-    assert(ruut(X, Y, C)),
-    assert(ruut(X2, Y2, 0)),
-    color(C, Cc),
-    vastane(Cc, V),
-    assert(ruut(X1, Y1, V)).
-vota_tagasi(vota_tammiga(X, Y, X1, Y1, X2, Y2)) :-
-    vota_tagasi(vota(X, Y, X1, Y1, X2, Y2)).
+    assert(ruut(X, Y, Piece)), !.
+backtrack(move(X, Y, X_new, Y_new), _, Piece) :-
+    retract(ruut(X_new, Y_new, _)),
+    assert(ruut(X_new, Y_new, 0)),
+    retract(ruut(X, Y, _)),
+    assert(ruut(X, Y, Piece)).
 
-:- dynamic ruut/3.
-ruut(1,1,1).
-ruut(1,3,1).
-ruut(1,5,1).
-ruut(1,7,1).
-ruut(2,2,1).
-ruut(2,4,1).
-ruut(2,6,1).
-ruut(2,8,1).
-ruut(3,1,1).
-ruut(3,3,1).
-ruut(3,5,1).
-ruut(3,7,1).
-% Tühjad ruudud
-ruut(4,2,0).
-ruut(4,4,0).
-ruut(4,6,0).
-ruut(4,8,0).
-ruut(5,1,0).
-ruut(5,3,0).
-ruut(5,5,0).
-ruut(5,7,0).
-% Mustad
-ruut(6,2,2).
-ruut(6,4,2).
-ruut(6,6,2).
-ruut(6,8,2).
-ruut(7,1,2).
-ruut(7,3,2).
-ruut(7,5,2).
-ruut(7,7,2).
-ruut(8,2,2).
-ruut(8,4,2).
-ruut(8,6,2).
-ruut(8,8,2).
+can_move(X, Y, Direction, X_new, Y_new) :-
+    X_new is X + Direction,
+    Y_new is Y + 1,
+    ruut(X_new, Y_new, 0).
+can_move(X, Y, Direction, X_new, Y_new) :-
+    X_new is X + Direction,
+    Y_new is Y - 1,
+    ruut(X_new, Y_new, 0).
 
-%=================== Print checkers board v2 - Start ==================
-status_sq(ROW,COL):-
-	(	ruut(ROW,COL,COLOR),
-        write(COLOR), (Tamm is COLOR mod 10, COLOR =\= 0, Tamm = 0; write(' '))
-	);(
-		write('  ')
-	).
-status_row(ROW):-
-	write('row # '),write(ROW), write('   '),
-	status_sq(ROW,1),
-	status_sq(ROW,2),
-	status_sq(ROW,3),
-	status_sq(ROW,4),
-	status_sq(ROW,5),
-	status_sq(ROW,6),
-	status_sq(ROW,7),
-	status_sq(ROW,8),
-	nl.
-% print the entire checkers board..
-status:-
-	nl,
-	status_row(8),
-	status_row(7),
-	status_row(6),
-	status_row(5),
-	status_row(4),
-	status_row(3),
-	status_row(2),
-	status_row(1), !.
+best_move_with_king(X, Y, X_new, Y_new, _) :-
+    X_new is X + 1,
+    Y_new is Y + 1,
+    ruut(X_new, Y_new, 0).
+best_move_with_king(X, Y, X_new, Y_new, _) :-
+    X_new is X + 1,
+    Y_new is Y - 1,
+    ruut(X_new, Y_new, 0).
+best_move_with_king(X, Y, X_new, Y_new, _) :-
+    X_new is X - 1,
+    Y_new is Y + 1,
+    ruut(X_new, Y_new, 0).
+best_move_with_king(X, Y, X_new, Y_new, _) :-
+    X_new is X - 1,
+    Y_new is Y - 1,
+    ruut(X_new, Y_new, 0).
 
-%=================== Print checkers board v2 - End ====================
+can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color) :-
+    Delta_x is Direction,
+    Delta_y is 1,
+    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color).
+can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color) :-
+    Delta_x is Direction,
+    Delta_y is -1,
+    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color).
+can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color) :-
+    Delta_x is Direction * -1,
+    Delta_y is 1,
+    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color).
+can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color) :-
+    Delta_x is Direction * -1,
+    Delta_y is -1,
+    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color).
 
+can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Direction, 1), Color) :-
+    Delta_x is Direction,
+    Delta_y is 1,
+    (
+        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color);
+        X_move is X + Delta_x,
+        Y_move is Y + Delta_y,
+        in_gameboard_bounds(X_move, Y_move),
+        ruut(X_move, Y_move, 0),
+        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y), Color)
+    ).
+can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Direction, -1), Color) :-
+    Delta_x is Direction,
+    Delta_y is -1,
+    (
+        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color);
+        X_move is X + Delta_x,
+        Y_move is Y + Delta_y,
+        in_gameboard_bounds(X_move, Y_move),
+        ruut(X_move, Y_move, 0),
+        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y), Color)
+    ).
+can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, 1), Color) :-
+    Delta_x is Direction * -1,
+    Delta_y is 1,
+    (
+        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color);
+        X_move is X + Delta_x,
+        Y_move is Y + Delta_y,
+        in_gameboard_bounds(X_move, Y_move),
+        ruut(X_move, Y_move, 0),
+        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y), Color)
+    ).
+can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, -1), Color) :-
+    Delta_x is Direction * -1,
+    Delta_y is -1,
+    (
+        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color);
+        X_move is X + Delta_x,
+        Y_move is Y + Delta_y,
+        in_gameboard_bounds(X_move, Y_move),
+        ruut(X_move, Y_move, 0),
+        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y), Color)
+    ).
+    
+can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color) :-
+    X_enemy is X + Delta_x,
+    Y_enemy is Y + Delta_y,
+    ruut(X_enemy, Y_enemy, Enemy_piece),
+    color(Enemy_piece, Enemy_color),
+    Color \= Enemy_color, Enemy_color \= 0,
+    X_new is X_enemy + Delta_x,
+    Y_new is Y_enemy + Delta_y,
+    ruut(X_new, Y_new, 0).
+
+best_landing(X_newA, Y_newA, Diagonal, X_newA, Y_newA).
