@@ -1,13 +1,19 @@
-iapb155243(Color, X, Y):-
+% Alfa-beta algoritmi loomisel on aluseks: http://colin.barker.pagesperso-orange.fr/lpa/tictac.htm
+
+iapb155243(Color, 0, 0) :-
     enemy(Color, Enemy),
     retractall(min_player(_)),
     retractall(max_player(_)),
     assert(min_player(Enemy)),
     assert(max_player(Color)),
-    Depth = 5,
-    minimax(Color, Depth, Best_move, Value),
-    write([Best_move, Value]), nl,
-    make_move(Best_move, _), !.
+    Depth = 6,
+    alfabeta(Color, Depth, -999999, 999999, Best_move, _),
+    (Best_move = capture([H|T]), make_move(H, _); make_move(Best_move, _)),
+    !.
+iapb155243(Color, X, Y) :-
+    direction(Color, Direction),
+    can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new),
+    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), _).
 iapb155243(_, _, _).
 
 enemy(1, 2) :- !.
@@ -51,46 +57,60 @@ heuristics(Color, _) :-
 heuristics(_, Value) :-
     retract(heuristics(Value)).
 
-possible_moves(Color, capture(X, Y, X_enemy, Y_enemy, X_new, Y_new)) :-
-    ruut(X, Y, Color),
+possible_moves_capture(Color, origin(X, Y), []) :-
     direction(Color, Direction),
-    can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new), !.
+    \+ can_capture(X, Y, Direction, _, _, _, _).
+possible_moves_capture(Color, origin(X, Y), [capture(X, Y, X_enemy, Y_enemy, X_new, Y_new)|Captures]) :-
+    direction(Color, Direction),
+    can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new),
+    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece),
+    possible_moves_capture(Color, origin(X_new, Y_new), Captures),
+    backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece), !.
+
+possible_moves(Color, capture(CaptureMove)) :-
+    retractall(has_captured(_)),
+    ruut(X, Y, Color),
+    possible_moves_capture(Color, origin(X, Y), CaptureMove),
+    CaptureMove \= [],
+    assert(has_captured(true)).
 possible_moves(Color, move(X, Y, X_new, Y_new)) :-
+    \+ retract(has_captured(true)),
     ruut(X, Y, Color),
     direction(Color, Direction),
     can_move(X, Y, Direction, X_new, Y_new).
 
-minimax(Color, 0, Alpha, Beta, _, Value) :-
+alfabeta(Color, 0, _, _, _, Value) :-
     heuristics(Color, Value), !.
-minimax(Color, Depth, Alpha, Beta, Best_move, Best_value) :-
+alfabeta(Color, Depth, Alpha, Beta, Best_move, Best_value) :-
     findall(Move, possible_moves(Color, Move), Moves),
-    best(Moves, Depth, Color, Best_move, Best_value), !.
-minimax(Color, _, _, Value) :-
+    New_depth is Depth - 1,
+    Alpha1 is -Beta,
+    Beta1 is -Alpha,
+    best(Moves, New_depth, Color, Alpha1, Beta1, 0, Best_move, Best_value), !.
+alfabeta(Color, _, _, _, _, Value) :-
     heuristics(Color, Value).
 
-best([Move], Depth, Color, Move, Best_value) :-
+best([Move|Moves], Depth, Color, Alpha, Beta, Move0, Best_move, Best_value) :-
     make_move(Move, Memory),
-    New_depth is Depth - 1,
     enemy(Color, Enemy),
-    minimax(Enemy, New_depth, _, Best_value),
-    backtrack(Move, Memory).
-best([Move|Moves], Depth, Color, Best_move, Best_value) :-
-    best(Moves, Depth, Color, MoveA, ValueA),
-    make_move(Move, Memory),
-    New_depth is Depth - 1,
-    enemy(Color, Enemy),
-    minimax(Enemy, New_depth, Move, ValueB),
+    alfabeta(Enemy, Depth, Alpha, Beta, _, Enemy_value),
+    Value is -Enemy_value,
     backtrack(Move, Memory),
-    better_of(Color, MoveA, ValueA, Move, ValueB, Best_move, Best_value).
+    cutoff(Move, Moves, Depth, Color, Value, Alpha, Beta, Move0, Best_move, Best_value).
+best([], _, _, Alpha, _, Move, Move, Alpha).
 
-better_of(Color, X_move, X_value, _, Y_value, X_move, X_value) :-
-    min_player(Color),
-    X_value > Y_value, !.
-better_of(Color, X_move, X_value, _, Y_value, X_move, X_value) :-
-    max_player(Color),
-    X_value < Y_value, !.
-better_of(_, _, _, Y_move, Y_value, Y_move, Y_value).
+cutoff(_, Moves, Depth, Color, Value, Alpha, Beta, Move0, MoveA, ValueA) :-
+    Value =< Alpha, !,
+    best(Moves, Depth, Color, Alpha, Beta, Move0, MoveA, ValueA).
+cutoff(Move, Moves, Depth, Color, Value, _, Beta, _, MoveA, ValueA) :-
+    Value < Beta, !,
+    best(Moves, Depth, Color, Value, Beta, Move, MoveA, ValueA).
+cutoff(Move, _, _, _, Value, _, _, _, Move, Value).
 
+make_move(capture([]), []) :- !.
+make_move(capture([H|T]), [Enemy_piece|Enemies]) :-
+    make_move(H, Enemy_piece),
+    make_move(capture(T), Enemies), !.
 make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece) :-
     retract(ruut(X_enemy, Y_enemy, Enemy_piece)),
     assert(ruut(X_enemy, Y_enemy, 0)),
@@ -104,6 +124,14 @@ make_move(move(X, Y, X_new, Y_new), _) :-
     retract(ruut(X_new, Y_new, _)),
     assert(ruut(X_new, Y_new, Piece)).
 
+backtrack_capture([], []).
+backtrack_capture([Move|Moves], [Enemy_piece|Enemies]) :-
+    backtrack(Move, Enemy_piece),
+    backtrack_capture(Moves, Enemies), !.
+backtrack(capture(Moves), Memory) :-
+    reverse(Moves, RevMoves),
+    reverse(Memory, RevMemory),
+    backtrack_capture(RevMoves, RevMemory), !.
 backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece) :-
     retract(ruut(X_enemy, Y_enemy, _)),
     assert(ruut(X_enemy, Y_enemy, Enemy_piece)),
@@ -231,3 +259,40 @@ status:-
 	status_row(1), !.
 
 %=================== Print checkers board v2 - End ====================
+
+:- dynamic ruut/3.
+% Valged
+ruut(1,1,1).
+ruut(1,3,1).
+ruut(1,5,1).
+ruut(1,7,1).
+ruut(2,2,1).
+ruut(2,4,1).
+ruut(2,6,1).
+ruut(2,8,1).
+ruut(3,1,1).
+ruut(3,3,1).
+ruut(3,5,1).
+ruut(3,7,1).
+% Tühjad ruudud
+ruut(4,2,0).
+ruut(4,4,0).
+ruut(4,6,0).
+ruut(4,8,0).
+ruut(5,1,0).
+ruut(5,3,0).
+ruut(5,5,0).
+ruut(5,7,0).
+% Mustad
+ruut(6,2,2).
+ruut(6,4,2).
+ruut(6,6,2).
+ruut(6,8,2).
+ruut(7,1,2).
+ruut(7,3,2).
+ruut(7,5,2).
+ruut(7,7,2).
+ruut(8,2,2).
+ruut(8,4,2).
+ruut(8,6,2).
+ruut(8,8,2).
