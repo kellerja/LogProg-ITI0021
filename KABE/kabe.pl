@@ -40,17 +40,9 @@ votmine(X,Y,Suund,X2,Y2):-
     kas_saab_votta(X,Y,Suund,X1,Y1,X2,Y2),
     vota(X,Y,Suund,X1,Y1,X2,Y2).
 
-:- dynamic on_votnud/2.
-votmine_tammiga(X, Y, Suund, X3, Y3):-
+votmine_tammiga(X, Y, Suund, X1, Y1, X3, Y3):-
     kas_saab_votta_tammiga(X, Y, Suund, X1, Y1, X2, Y2, Kaimise_suund),
-    parim_maandumiskoht(X2, Y2, Kaimise_suund, X3, Y3),
-    vota(X, Y, Suund, X1, Y1, X3, Y3),
-    retractall(on_votnud(_, _)),
-    assert(on_votnud(X3, Y3)),
-    votmine_tammiga(X3, Y3, Suund, X4, Y4).
-votmine_tammiga(_, _, _, X2, Y2):-
-    on_votnud(X2, Y2),
-    retract(on_votnud(_, _)).
+    parim_maandumiskoht(X2, Y2, Kaimise_suund, X3, Y3).
 
 parim_maandumiskoht(X2, Y2, Kaimise_suund, X2, Y2).
 
@@ -153,52 +145,116 @@ vota(X, Y, _, X1, Y1, X2, Y2) :-
     retract(ruut(X2, Y2, _)),
     assert(ruut(X2, Y2, Status)).
 
+vota(X, Y, X1, Y1, X2, Y2) :-
+    retract(ruut(X1, Y1, _)),
+    assert(ruut(X1, Y1, 0)),
+    retract(ruut(X, Y, Status)),
+    assert(ruut(X, Y, 0)),
+    retract(ruut(X2, Y2, _)),
+    assert(ruut(X2, Y2, Status)).
+
 tee_kaik(X,Y,X1,Y1) :-
     retract(ruut(X, Y, Status)),
     assert(ruut(X, Y, 0)),
     retract(ruut(X1, Y1, _)),
     assert(ruut(X1, Y1, Status)).
 
-kaigu_variandid(Color, Depth, State, kai(X, Y, X1,Y1)) :-
-    leia_suund(Color, Suund),
-    ruut(X, Y, Color, Depth, State, _, _),
-    kas_naaber_vaba(ruut(X, Y, Color, Depth, State, _, _), Suund, X1, Y1).
+kaigu_variandid(Varv, vota_tammiga(X, Y, X1, Y1, X2, Y2)) :-
+    retractall(on_voetud(_)),
+    leia_suund(Varv, Suund),
+    Tamm is Varv * 10, ruut(X, Y, Tamm),
+    votmine_tammiga(X, Y, Suund, X1, Y1, X2, Y2),
+    assert(on_voetud(true)).
+kaigu_variandid(Varv, vota(X, Y, X1, Y1, X2, Y2)) :-
+    leia_suund(Varv, Suund),
+    ruut(X, Y, Varv),
+    kas_saab_votta(X, Y, Suund, X1, Y1, X2, Y2),
+    retract(on_voetud(_)),
+    assert(on_voetud(true)).
+kaigu_variandid(Varv, kai(X, Y, X1,Y1)) :-
+    \+ on_voetud(true),
+    leia_suund(Varv, Suund),
+    ruut(X, Y, Varv),
+    kas_naaber_vaba(X,Y,Suund,X1,Y1).
 
-kopeeri_valja(Depth) :-
-    ruut(X, Y, C),
-    assert(ruut(X, Y, C, Depth, 0, 0, 0)), 
+main(Color, Parim, V) :-
+    vastane(Color, Vastane),
+    retractall(minPlayer(_)),
+    retractall(maxPlayer(_)),
+    assert(minPlayer(Vastane)),
+    assert(maxPlayer(Color)),
+    Depth = 4,
+    minimax(Color, Depth, Parim, V),
+    tee_kaik(Parim).
+
+minimax(Color, 0, Kaik, Val) :-
+    vaartus(Color, Val), !.
+minimax(Color, Depth, Parim, ParimVal) :-
+    findall(Kaik, kaigu_variandid(Color, Kaik), Kaigud),
+    parim(Kaigud, Depth, Color, Parim, ParimVal).
+
+parim([Kaik], Depth, Color, Kaik, ParimVal) :-
+    tee_kaik(Kaik),
+    UusDepth is Depth - 1,
+    vastane(Color, UusColor),
+    minimax(UusColor, UusDepth, _, ParimVal),
+    vota_tagasi(Kaik).
+parim([Kaik|Kaigud], Depth, Color, Parim, ParimVal) :-
+    parim(Kaigud, Depth, Color, AltTee, AltVaartus),    
+    tee_kaik(Kaik),
+    UusDepth is Depth - 1,
+    vastane(Color, UusColor),
+    minimax(UusColor, UusDepth, Tee, Vaartus),
+    vota_tagasi(Kaik),
+    parem(Color, Tee, Vaartus, AltTee, AltVaartus, Parim, ParimVal).
+
+vastane(1, 2).
+vastane(2, 1).
+
+vaartus(_, _) :-
+    retractall(vaartus(_)), assert(vaartus(0)), fail.
+vaartus(Color, _) :-
+    ruut(_, _, C),
+    C \= 0,
+    retract(vaartus(V)),
+    (
+        C = Color, NewV is V + 1, assert(vaartus(NewV));
+        Tamm is Color * 10, C = Tamm, NewV is V + 2, assert(vaartus(NewV));
+        vastane(Color, Vastane), VTamm is Vastane * 10, C = VTamm, NewV is V - 2, assert(vaartus(NewV));
+        vastane(Color, Vastane), C = Vastane, NewV is V - 1, assert(vaartus(NewV))
+        ),
     fail.
-kopeeri_valja(_).
+vaartus(_, Vaartus) :-
+    retract(vaartus(Vaartus)).
 
-main(Color) :-
-    retractall(ruut(_, _, _, _, _, _, _)),
-    Depth = 2,
-    kopeeri_valja(Depth),
-    minimax(Color),
+parem(Color, Xt, Xv, _, Yv, Xt, Xv) :-
+    minPlayer(Color),
+    Xv > Yv, !.
+parem(Color, Xt, Xv, _, Yv, Xt, Xv) :-
+    maxPlayer(Color),
+    Xv < Yv, !.
+parem(_, _, _, Yt, Yv, Yt, Yv).
 
-minimax(Color, State) :-
+tee_kaik(kai(X, Y, X1, Y1)) :-
+    tee_kaik(X, Y, X1, Y1), !.
+tee_kaik(vota(X, Y, X1, Y1, X2, Y2)) :-
+    vota(X, Y, X1, Y1, X2, Y2).
+tee_kaik(vota_tammiga(X, Y, X1, Y1, X2, Y2)) :-
+    vota(X, Y, X1, Y1, X2, Y2).
 
-minimax(Pos, 0, _, Val) :-
-    utility(Pos, Val).
-minimax(AlgPos, Depth, ParimKaik, Val) :-
-    bagof(Kaik, kaigu_variandid(AlgPos, Kaik), Kaigud),
-    best(Kaigud, Depth, ParimKaik, Val), !.
-
-best([Kaik], Depth, Kaik, Val) :-
-    minimax(Kaik, Depth, _, Val), !.
-best([Kaik| Kaigud], Depth, ParimKaik, ParimVal) :-
-    NewDepth is Depth - 1,
-    minimax(Kaik, NewDepth, _, Val),
-    best(Kaigud, Depth, AlternatiivneKaik, AlternatiivneVal),
-    betterOf(Kaik, Val, AlternatiivneKaik, AlternatiivneVal, ParimKaik, ParimVal).
-
-betterOf(Pos0, Val0, _, Val1, Pos0, Val0) :-
-    min_to_move(Pos0),
-    Val0 > Val1, !.
-betterOf(Pos0, Val0, _, Val1, Pos0, Val0) :-
-    max_to_move(Pos0),
-    Val0 > Val1, !.
-betterOf(_, _, Pos1, Val1, Pos1, Val1).
+vota_tagasi(kai(X, Y, X1, Y1)) :-
+    tee_kaik(X1, Y1, X, Y), !.
+vota_tagasi(vota(X, Y, X1, Y1, X2, Y2)) :-
+    retract(ruut(X, Y, _)),
+    retract(ruut(X2, Y2, C)),
+    retract(ruut(X1, Y1, _)),
+    assert(ruut(X, Y, C)),
+    assert(ruut(X2, Y2, 0)),
+    color(C, Cc),
+    vastane(Cc, V),
+    assert(ruut(X1, Y1, V)).
+vota_tagasi(vota_tammiga(X, Y, X1, Y1, X2, Y2)) :-
+    vota_tagasi(vota(X, Y, X1, Y1, X2, Y2)).
 
 :- dynamic ruut/3.
 ruut(1,1,1).
@@ -235,3 +291,36 @@ ruut(8,2,2).
 ruut(8,4,2).
 ruut(8,6,2).
 ruut(8,8,2).
+
+%=================== Print checkers board v2 - Start ==================
+status_sq(ROW,COL):-
+	(	ruut(ROW,COL,COLOR),
+        write(COLOR), (Tamm is COLOR mod 10, COLOR =\= 0, Tamm = 0; write(' '))
+	);(
+		write('  ')
+	).
+status_row(ROW):-
+	write('row # '),write(ROW), write('   '),
+	status_sq(ROW,1),
+	status_sq(ROW,2),
+	status_sq(ROW,3),
+	status_sq(ROW,4),
+	status_sq(ROW,5),
+	status_sq(ROW,6),
+	status_sq(ROW,7),
+	status_sq(ROW,8),
+	nl.
+% print the entire checkers board..
+status:-
+	nl,
+	status_row(8),
+	status_row(7),
+	status_row(6),
+	status_row(5),
+	status_row(4),
+	status_row(3),
+	status_row(2),
+	status_row(1), !.
+
+%=================== Print checkers board v2 - End ====================
+
