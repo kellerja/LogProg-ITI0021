@@ -8,11 +8,11 @@ iapb155243(Color, 0, 0) :-
     assert(max_player(Color)),
     Depth = 6,
     alfabeta(Color, Depth, -999999, 999999, Best_move, _),
-    (Best_move = capture([H|T]), make_move(H, _); make_move(Best_move, _)),
+    (Best_move = capture([H|_]), make_move(H, _); make_move(Best_move, _)),
     !.
 iapb155243(Color, X, Y) :-
     direction(Color, Direction),
-    can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new),
+    can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color),
     make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), _).
 iapb155243(_, _, _).
 
@@ -25,10 +25,16 @@ direction(2, -1).
 color(1, 1) :- !.
 color(10, 1) :- !.
 color(2, 2) :- !.
-color(20, 2).
+color(20, 2) :- !.
+color(0, 0).
 
 tamm(10) :- !.
 tamm(20).
+
+tamm(1, 10) :- !.
+tamm(10, 10) :- !.
+tamm(2, 20) :- !.
+tamm(20, 20).
 
 in_gameboard_bounds(X, Y) :-
     X >= 1, Y >= 1, X =< 8, Y =< 8.
@@ -59,13 +65,24 @@ heuristics(_, Value) :-
 
 possible_moves_capture(Color, origin(X, Y), []) :-
     direction(Color, Direction),
-    \+ can_capture(X, Y, Direction, _, _, _, _).
+    \+ can_capture(X, Y, Direction, _, _, _, _, Color).
 possible_moves_capture(Color, origin(X, Y), [capture(X, Y, X_enemy, Y_enemy, X_new, Y_new)|Captures]) :-
     direction(Color, Direction),
-    can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new),
+    can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color),
     make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece),
     possible_moves_capture(Color, origin(X_new, Y_new), Captures),
     backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece), !.
+
+possible_moves_capture_with_king(Color, origin(X, Y), []) :-
+    direction(Color, Direction),
+    \+ can_capture_with_king(X, Y, Direction, _, _, _, _, _, Color).
+possible_moves_capture_with_king(Color, origin(X, Y), [capture(X, Y, X_enemy, Y_enemy, X_new, Y_new)|Captures]) :-
+    direction(Color, Direction),
+    can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_newA, Y_newA, Diagonal, Color),
+    best_landing(X_newA, Y_newA, Diagonal, X_new, Y_new),
+    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Memory),
+    possible_moves_capture_with_king(Color, origin(X_new, Y_new), Captures),
+    backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Memory), !.
 
 possible_moves(Color, capture(CaptureMove)) :-
     retractall(has_captured(_)),
@@ -73,16 +90,29 @@ possible_moves(Color, capture(CaptureMove)) :-
     possible_moves_capture(Color, origin(X, Y), CaptureMove),
     CaptureMove \= [],
     assert(has_captured(true)).
+possible_moves(Color, capture(CaptureMove)) :-
+    tamm(Color, King),
+    ruut(X, Y, King),
+    possible_moves_capture_with_king(Color, origin(X, Y), CaptureMove),
+    CaptureMove \= [],
+    retractall(has_captured(_)),
+    assert(has_captured(true)).
 possible_moves(Color, move(X, Y, X_new, Y_new)) :-
     \+ retract(has_captured(true)),
     ruut(X, Y, Color),
     direction(Color, Direction),
     can_move(X, Y, Direction, X_new, Y_new).
+possible_moves(Color, move(X, Y, X_new, Y_new)) :-
+    \+ retract(has_captured(true)),
+    tamm(Color, King),
+    ruut(X, Y, King),
+    best_move_with_king(X, Y, X_new, Y_new, Color).
 
 alfabeta(Color, 0, _, _, _, Value) :-
     heuristics(Color, Value), !.
 alfabeta(Color, Depth, Alpha, Beta, Best_move, Best_value) :-
     findall(Move, possible_moves(Color, Move), Moves),
+    Moves \= [],
     New_depth is Depth - 1,
     Alpha1 is -Beta,
     Beta1 is -Alpha,
@@ -154,71 +184,86 @@ can_move(X, Y, Direction, X_new, Y_new) :-
     Y_new is Y - 1,
     ruut(X_new, Y_new, 0).
 
-can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new) :-
-    Delta_x is Direction,
-    Delta_y is 1,
-    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new).
-can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new) :-
-    Delta_x is Direction,
-    Delta_y is -1,
-    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new).
-can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new) :-
-    Delta_x is Direction * -1,
-    Delta_y is 1,
-    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new).
-can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new) :-
-    Delta_x is Direction * -1,
-    Delta_y is -1,
-    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new).
+best_move_with_king(X, Y, X_new, Y_new, _) :-
+    X_new is X + 1,
+    Y_new is Y + 1,
+    ruut(X_new, Y_new, 0).
+best_move_with_king(X, Y, X_new, Y_new, _) :-
+    X_new is X + 1,
+    Y_new is Y - 1,
+    ruut(X_new, Y_new, 0).
+best_move_with_king(X, Y, X_new, Y_new, _) :-
+    X_new is X - 1,
+    Y_new is Y + 1,
+    ruut(X_new, Y_new, 0).
+best_move_with_king(X, Y, X_new, Y_new, _) :-
+    X_new is X - 1,
+    Y_new is Y - 1,
+    ruut(X_new, Y_new, 0).
 
-can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, diretion(Direction, 1)) :-
+can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color) :-
+    Delta_x is Direction,
+    Delta_y is 1,
+    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color).
+can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color) :-
+    Delta_x is Direction,
+    Delta_y is -1,
+    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color).
+can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color) :-
+    Delta_x is Direction * -1,
+    Delta_y is 1,
+    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color).
+can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color) :-
+    Delta_x is Direction * -1,
+    Delta_y is -1,
+    can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color).
+
+can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Direction, 1), Color) :-
     Delta_x is Direction,
     Delta_y is 1,
     (
-        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new);
+        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color);
         X_move is X + Delta_x,
         Y_move is Y + Delta_y,
         in_gameboard_bounds(X_move, Y_move),
         ruut(X_move, Y_move, 0),
-        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y))
+        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y), Color)
     ).
-can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, diretion(Direction, -1)) :-
+can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Direction, -1), Color) :-
     Delta_x is Direction,
     Delta_y is -1,
     (
-        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new);
+        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color);
         X_move is X + Delta_x,
         Y_move is Y + Delta_y,
         in_gameboard_bounds(X_move, Y_move),
         ruut(X_move, Y_move, 0),
-        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y))
+        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y), Color)
     ).
-can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, diretion(Delta_x, 1)) :-
+can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, 1), Color) :-
     Delta_x is Direction * -1,
     Delta_y is 1,
     (
-        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new);
+        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color);
         X_move is X + Delta_x,
         Y_move is Y + Delta_y,
         in_gameboard_bounds(X_move, Y_move),
         ruut(X_move, Y_move, 0),
-        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y))
+        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y), Color)
     ).
-can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, diretion(Delta_x, -1)) :-
+can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, -1), Color) :-
     Delta_x is Direction * -1,
     Delta_y is -1,
     (
-        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new);
+        can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color);
         X_move is X + Delta_x,
         Y_move is Y + Delta_y,
         in_gameboard_bounds(X_move, Y_move),
         ruut(X_move, Y_move, 0),
-        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y))
+        can_capture_with_king(X_move, Y_move, Direction, X_enemy, Y_enemy, X_new, Y_new, direction(Delta_x, Delta_y), Color)
     ).
     
-can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new) :-
-    ruut(X, Y, Piece),
-    color(Piece, Color),
+can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Color) :-
     X_enemy is X + Delta_x,
     Y_enemy is Y + Delta_y,
     ruut(X_enemy, Y_enemy, Enemy_piece),
@@ -228,6 +273,7 @@ can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new) :-
     Y_new is Y_enemy + Delta_y,
     ruut(X_new, Y_new, 0).
 
+best_landing(X_newA, Y_newA, Diagonal, X_newA, Y_newA).
 %=================== Print checkers board v2 - Start ==================
 status_sq(ROW,COL):-
 	(	ruut(ROW,COL,COLOR),
@@ -259,40 +305,39 @@ status:-
 	status_row(1), !.
 
 %=================== Print checkers board v2 - End ====================
-
 :- dynamic ruut/3.
 % Valged
-ruut(1,1,1).
-ruut(1,3,1).
-ruut(1,5,1).
-ruut(1,7,1).
-ruut(2,2,1).
-ruut(2,4,1).
-ruut(2,6,1).
-ruut(2,8,1).
-ruut(3,1,1).
-ruut(3,3,1).
-ruut(3,5,1).
-ruut(3,7,1).
+ruut(1,1,1). % 1
+ruut(1,3,2). % 2
+ruut(1,5,0).
+ruut(1,7,0).
+ruut(2,2,0).
+ruut(2,4,0).
+ruut(2,6,1). % 1
+ruut(2,8,0).
+ruut(3,1,0).
+ruut(3,3,0).
+ruut(3,5,0).
+ruut(3,7,0).
 % Tühjad ruudud
 ruut(4,2,0).
-ruut(4,4,0).
+ruut(4,4,1). % 1
 ruut(4,6,0).
-ruut(4,8,0).
+ruut(4,8,1). % 1
 ruut(5,1,0).
 ruut(5,3,0).
 ruut(5,5,0).
 ruut(5,7,0).
 % Mustad
-ruut(6,2,2).
-ruut(6,4,2).
-ruut(6,6,2).
-ruut(6,8,2).
-ruut(7,1,2).
-ruut(7,3,2).
-ruut(7,5,2).
-ruut(7,7,2).
-ruut(8,2,2).
-ruut(8,4,2).
-ruut(8,6,2).
-ruut(8,8,2).
+ruut(6,2,2). % 2
+ruut(6,4,0).
+ruut(6,6,0).
+ruut(6,8,0).
+ruut(7,1,0).
+ruut(7,3,0).
+ruut(7,5,0).
+ruut(7,7,0).
+ruut(8,2,0).
+ruut(8,4,0).
+ruut(8,6,0).
+ruut(8,8,1). % 1
