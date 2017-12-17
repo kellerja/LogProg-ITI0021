@@ -9,7 +9,7 @@
 %mustad(k1)     % mustadega mängib programm k1
 
 valged(iapb155243).		% Valged
-mustad(iapb155243).		% Mustad
+mustad(human).		% Mustad
 
 % Seejärel laadida mällu see programm (graphicArbiter) ja võistlevad kabeprogrammid.
 %                                                         _________________________

@@ -8,12 +8,12 @@ iapb155243(Color, 0, 0) :-
     assert(max_player(Color)),
     Depth = 6,
     alfabeta(Color, Depth, -999999, 999999, Best_move, _),
-    (Best_move = capture([H|_]), make_move(H, _); make_move(Best_move, _)),
+    (Best_move = capture([H|_]), make_move(H, _, _); make_move(Best_move, _, _)),
     !.
 iapb155243(Color, X, Y) :-
     direction(Color, Direction),
     can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color),
-    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), _).
+    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), _, _).
 iapb155243(_, _, _).
 
 enemy(1, 2) :- !.
@@ -69,9 +69,12 @@ possible_moves_capture(Color, origin(X, Y), []) :-
 possible_moves_capture(Color, origin(X, Y), [capture(X, Y, X_enemy, Y_enemy, X_new, Y_new)|Captures]) :-
     direction(Color, Direction),
     can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color),
-    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece),
-    possible_moves_capture(Color, origin(X_new, Y_new), Captures),
-    backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece), !.
+    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece, Piece),
+    (
+        ruut(X_new, Y_new, C), tamm(C), possible_moves_capture_with_king(Color, origin(X_new, Y_new), Captures);
+        possible_moves_capture(Color, origin(X_new, Y_new), Captures)
+    ),
+    backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece, Piece), !.
 
 possible_moves_capture_with_king(Color, origin(X, Y), []) :-
     direction(Color, Direction),
@@ -80,9 +83,9 @@ possible_moves_capture_with_king(Color, origin(X, Y), [capture(X, Y, X_enemy, Y_
     direction(Color, Direction),
     can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_newA, Y_newA, Diagonal, Color),
     best_landing(X_newA, Y_newA, Diagonal, X_new, Y_new),
-    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Memory),
+    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_memory, Memory),
     possible_moves_capture_with_king(Color, origin(X_new, Y_new), Captures),
-    backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Memory), !.
+    backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_memory, Memory), !.
 
 possible_moves(Color, capture(CaptureMove)) :-
     retractall(has_captured(_)),
@@ -112,20 +115,22 @@ alfabeta(Color, 0, _, _, _, Value) :-
     heuristics(Color, Value), !.
 alfabeta(Color, Depth, Alpha, Beta, Best_move, Best_value) :-
     findall(Move, possible_moves(Color, Move), Moves),
-    Moves \= [],
-    New_depth is Depth - 1,
-    Alpha1 is -Beta,
-    Beta1 is -Alpha,
-    best(Moves, New_depth, Color, Alpha1, Beta1, 0, Best_move, Best_value), !.
+    (
+        Moves = [], Best_value = -9999;
+        New_depth is Depth - 1,
+        Alpha1 is -Beta,
+        Beta1 is -Alpha,
+        best(Moves, New_depth, Color, Alpha1, Beta1, 0, Best_move, Best_value)
+    ), !.
 alfabeta(Color, _, _, _, _, Value) :-
     heuristics(Color, Value).
 
 best([Move|Moves], Depth, Color, Alpha, Beta, Move0, Best_move, Best_value) :-
-    make_move(Move, Memory),
+    make_move(Move, Enemy_memory, Memory),
     enemy(Color, Enemy),
     alfabeta(Enemy, Depth, Alpha, Beta, _, Enemy_value),
     Value is -Enemy_value,
-    backtrack(Move, Memory),
+    backtrack(Move, Enemy_memory, Memory),
     cutoff(Move, Moves, Depth, Color, Value, Alpha, Beta, Move0, Best_move, Best_value).
 best([], _, _, Alpha, _, Move, Move, Alpha).
 
@@ -137,40 +142,54 @@ cutoff(Move, Moves, Depth, Color, Value, _, Beta, _, MoveA, ValueA) :-
     best(Moves, Depth, Color, Value, Beta, Move, MoveA, ValueA).
 cutoff(Move, _, _, _, Value, _, _, _, Move, Value).
 
-make_move(capture([]), []) :- !.
-make_move(capture([H|T]), [Enemy_piece|Enemies]) :-
-    make_move(H, Enemy_piece),
-    make_move(capture(T), Enemies), !.
-make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece) :-
+make_move(capture([]), [], []) :- !.
+make_move(capture([H|T]), [Enemy_piece|Enemies], [Piece|Pieces]) :-
+    make_move(H, Enemy_piece, Piece),
+    make_move(capture(T), Enemies, Pieces), !.
+make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece, Piece) :-
     retract(ruut(X_enemy, Y_enemy, Enemy_piece)),
     assert(ruut(X_enemy, Y_enemy, 0)),
     retract(ruut(X, Y, Piece)),
     assert(ruut(X, Y, 0)),
     retract(ruut(X_new, Y_new, _)),
-    assert(ruut(X_new, Y_new, Piece)), !.
-make_move(move(X, Y, X_new, Y_new), _) :-
+    assert(ruut(X_new, Y_new, Piece)),
+    make_king(X_new, Y_new), !.
+make_move(move(X, Y, X_new, Y_new), _, Piece) :-
     retract(ruut(X, Y, Piece)),
     assert(ruut(X, Y, 0)),
     retract(ruut(X_new, Y_new, _)),
-    assert(ruut(X_new, Y_new, Piece)).
+    assert(ruut(X_new, Y_new, Piece)),
+    make_king(X_new, Y_new).
 
-backtrack_capture([], []).
-backtrack_capture([Move|Moves], [Enemy_piece|Enemies]) :-
-    backtrack(Move, Enemy_piece),
-    backtrack_capture(Moves, Enemies), !.
-backtrack(capture(Moves), Memory) :-
+make_king(X, Y) :-
+    ruut(X, Y, Piece), 
+    can_make_king(X, Y, Piece),
+    King is Piece * 10,
+    retract(ruut(X, Y, Piece)),
+    assert(ruut(X, Y, King)).
+make_king(_, _).
+
+can_make_king(8, _, 1) :- !.
+can_make_king(1, _, 2).
+
+backtrack_capture([], [], []) :- !.
+backtrack_capture([Move|Moves], [Enemy_piece|Enemies], [Piece|Pieces]) :-
+    backtrack(Move, Enemy_piece, Piece),
+    backtrack_capture(Moves, Enemies, Pieces), !.
+backtrack(capture(Moves), Memory, Pieces) :-
     reverse(Moves, RevMoves),
     reverse(Memory, RevMemory),
-    backtrack_capture(RevMoves, RevMemory), !.
-backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece) :-
+    reverse(Pieces, RevPieces),
+    backtrack_capture(RevMoves, RevMemory, RevPieces), !.
+backtrack(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), Enemy_piece, Piece) :-
     retract(ruut(X_enemy, Y_enemy, _)),
     assert(ruut(X_enemy, Y_enemy, Enemy_piece)),
-    retract(ruut(X_new, Y_new, Piece)),
+    retract(ruut(X_new, Y_new, _)),
     assert(ruut(X_new, Y_new, 0)),
     retract(ruut(X, Y, _)),
     assert(ruut(X, Y, Piece)), !.
-backtrack(move(X, Y, X_new, Y_new), _) :-
-    retract(ruut(X_new, Y_new, Piece)),
+backtrack(move(X, Y, X_new, Y_new), _, Piece) :-
+    retract(ruut(X_new, Y_new, _)),
     assert(ruut(X_new, Y_new, 0)),
     retract(ruut(X, Y, _)),
     assert(ruut(X, Y, Piece)).
@@ -274,70 +293,3 @@ can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Colo
     ruut(X_new, Y_new, 0).
 
 best_landing(X_newA, Y_newA, Diagonal, X_newA, Y_newA).
-%=================== Print checkers board v2 - Start ==================
-status_sq(ROW,COL):-
-	(	ruut(ROW,COL,COLOR),
-        write(COLOR), (Tamm is COLOR mod 10, COLOR =\= 0, Tamm = 0; write(' '))
-	);(
-		write('  ')
-	).
-status_row(ROW):-
-	write('row # '),write(ROW), write('   '),
-	status_sq(ROW,1),
-	status_sq(ROW,2),
-	status_sq(ROW,3),
-	status_sq(ROW,4),
-	status_sq(ROW,5),
-	status_sq(ROW,6),
-	status_sq(ROW,7),
-	status_sq(ROW,8),
-	nl.
-% print the entire checkers board..
-status:-
-	nl,
-	status_row(8),
-	status_row(7),
-	status_row(6),
-	status_row(5),
-	status_row(4),
-	status_row(3),
-	status_row(2),
-	status_row(1), !.
-
-%=================== Print checkers board v2 - End ====================
-:- dynamic ruut/3.
-% Valged
-ruut(1,1,1). % 1
-ruut(1,3,2). % 2
-ruut(1,5,0).
-ruut(1,7,0).
-ruut(2,2,0).
-ruut(2,4,0).
-ruut(2,6,1). % 1
-ruut(2,8,0).
-ruut(3,1,0).
-ruut(3,3,0).
-ruut(3,5,0).
-ruut(3,7,0).
-% Tühjad ruudud
-ruut(4,2,0).
-ruut(4,4,1). % 1
-ruut(4,6,0).
-ruut(4,8,1). % 1
-ruut(5,1,0).
-ruut(5,3,0).
-ruut(5,5,0).
-ruut(5,7,0).
-% Mustad
-ruut(6,2,2). % 2
-ruut(6,4,0).
-ruut(6,6,0).
-ruut(6,8,0).
-ruut(7,1,0).
-ruut(7,3,0).
-ruut(7,5,0).
-ruut(7,7,0).
-ruut(8,2,0).
-ruut(8,4,0).
-ruut(8,6,0).
-ruut(8,8,1). % 1
