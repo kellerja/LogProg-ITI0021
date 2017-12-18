@@ -1,3 +1,4 @@
+:- module(iapb155243, [iapb155243/3]).
 % Alfa-beta algoritmi loomisel on aluseks: http://colin.barker.pagesperso-orange.fr/lpa/tictac.htm
 
 iapb155243(Color, 0, 0) :-
