@@ -12,6 +12,14 @@ iapb155243(Color, 0, 0) :-
     (Best_move = capture([H|_]), make_move(H, _, _); make_move(Best_move, _, _)),
     !.
 iapb155243(Color, X, Y) :-
+    ruut(X, Y, Piece),
+    tamm(Piece),
+    direction(Color, Direction),
+    can_capture_with_king(X, Y, Direction, X_enemy, Y_enemy, X_newA, Y_newA, Diagonal, Color),
+    best_landing(X_newA, Y_newA, Diagonal, X_new, Y_new),
+    make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), _, _), 
+    !.
+iapb155243(Color, X, Y) :-
     direction(Color, Direction),
     can_capture(X, Y, Direction, X_enemy, Y_enemy, X_new, Y_new, Color),
     make_move(capture(X, Y, X_enemy, Y_enemy, X_new, Y_new), _, _).
@@ -50,11 +58,11 @@ heuristics(Color, _) :-
         Color = PieceColor, 
         (
             tamm(PieceColor), New_value is Value + 10;
-            \+ tamm(PieceColor), New_value is Value + 2
+            \+ tamm(PieceColor), New_value is Value + 1
         );
         enemy(Color, PieceColor),
         (
-            tamm(PieceColor), New_value is Value - 5;
+            tamm(PieceColor), New_value is Value - 10;
             \+ tamm(PieceColor), New_value is Value - 1
         );
         PieceColor = 0, New_value is Value
@@ -102,7 +110,7 @@ possible_moves(Color, capture(CaptureMove)) :-
     retractall(has_captured(_)),
     assert(has_captured(true)).
 possible_moves(Color, move(X, Y, X_new, Y_new)) :-
-    \+ retract(has_captured(true)),
+    \+ has_captured(true),
     ruut(X, Y, Color),
     direction(Color, Direction),
     can_move(X, Y, Direction, X_new, Y_new).
@@ -293,4 +301,4 @@ can_capture_general(X, Y, Delta_x, Delta_y, X_enemy, Y_enemy, X_new, Y_new, Colo
     Y_new is Y_enemy + Delta_y,
     ruut(X_new, Y_new, 0).
 
-best_landing(X_newA, Y_newA, Diagonal, X_newA, Y_newA).
+best_landing(X_newA, Y_newA, _, X_newA, Y_newA).
