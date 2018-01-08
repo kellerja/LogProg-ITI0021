@@ -8,7 +8,7 @@
 %valged(human)  % valgetega mängib inimine
 %mustad(k1)     % mustadega mängib programm k1
 
-valged(iapb155243).		% Valged
+valged(iapb155133).		% Valged
 mustad(iapb155243).		% Mustad
 
 % Seejärel laadida mällu see programm (graphicArbiter) ja võistlevad kabeprogrammid.
@@ -260,7 +260,7 @@ checkers_x(6, g).
 checkers_x(7, h).
 
 
-checkers :-
+checkers:-
 	new(Window, window('Kabe', size(8*32, 8*32))),
 	make_checkers_board(Board),
 	send(Window, display, Board),
@@ -308,13 +308,16 @@ t(Mode):-
 		announce_winner(Color),
 	korista,				% kommenteeritud välja testimise ajaks!!!!!!!!
 	!.
+	
+
 
 human(Color,_,_):-
-	\+ruut(_,_,Color). % Kui inimisel ühtegi nuppu alles ei ole, siis inimene kaotab.
+	aggregate_all(count, (sama_varv(Color, C), ruut(_,_,C)), Count),
+	Count = 0. % Kui inimisel ühtegi nuppu alles ei ole, siis inimene kaotab.
 human(Color,X,Y):-
 	retractall(human_move(_,_,_,_)),
 	((Color = 1, write('Ootan kaiku (valged): ')); (Color = 2, write('Ootan kaiku (mustad): '))),
-	((X = 0); (X \= 0, write("Jatka loomist nupuga: "), write(X), write(' '), write(Y), write(' '))),
+	((X = 0); (X \= 0, write('Jatka loomist nupuga: '), write(X), write(' '), write(Y), write(' '))),
 	flush_output,
 	repeat,
 	sleep(0.5),
